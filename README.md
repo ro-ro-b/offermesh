@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.5.0)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.5.1)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -15,6 +15,10 @@ npm run test:all    # check + smoke + MCP smoke + persistence smoke
 
 Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE`, and `OFFERMESH_ALERT_*` for production-readiness posture.
 
+## v0.5.1 — DUAL UI/UX standard pass
+
+This pass applies the DUAL product-shell standard used by Tokenisation Studio: light DUAL chrome, sticky topbar, segmented workflow navigation, proof/status rails, compact cards, and explicit write/readiness boundaries. It is a UI/UX release over the same v0.5 production-readiness contract.
+
 ## v0.5.0 — production-readiness tranche
 
 This tranche reconciles the external Cowork result without inflating it: Revolv v0.4.0 received a scoped 9.8/10 Cowork pass for the next-six consolidation, but v0.5.x still needs a fresh broad production/partner-ready review after deployment.
@@ -29,7 +33,7 @@ New production-readiness surfaces:
 
 OIDC support is provider-ready but not provider-created by the app: configure issuer, audience, and JWKS URL from Auth0/Clerk/WorkOS, ensure tokens include `tenant_id` and `roles`, then run the two-browser tenant isolation drill before any production-ready claim. Payment capture and live DUAL writes remain separate approval gates.
 
-Production claim boundary: v0.5.0 can be called a production-readiness tranche or production-pilot candidate only after hosted checks pass. Do not call it production-ready or partner-ready until the exact deployed v0.5.x commit receives a fresh broad external Cowork pass.
+Production claim boundary: v0.5.x can be called a production-readiness tranche or production-pilot candidate only after hosted checks pass. Do not call it production-ready or partner-ready until the exact deployed v0.5.x commit receives a fresh broad external Cowork pass.
 
 ## v0.4.0 — all-six next step surface
 

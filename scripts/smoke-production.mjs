@@ -38,7 +38,7 @@ try {
   }
 
   const status = await get('/api/status');
-  assert('status is v0.5.0 Revolv', status.body.version === '0.5.0' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
+  assert('status is v0.5.1 Revolv', status.body.version === '0.5.1' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('DUAL remains read-only', status.body.dual?.writeMode === 'read_only' && status.body.dual?.liveDualWrites === false && status.body.dual?.publicWrites === false, status.body.dual);
 
   const monitor = await get('/api/ops/monitor');
@@ -60,7 +60,7 @@ try {
   assert('OIDC fails closed unless bound', [401, 403].includes(session.code), session.body);
 
   const bundle = await get('/api/source/review-bundle');
-  assert('source bundle versioned', bundle.body.service_version === '0.5.0' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
+  assert('source bundle versioned', bundle.body.service_version === '0.5.1' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
 } catch (err) {
   failures++;
   console.error('FAIL production smoke crashed:', err.message);
