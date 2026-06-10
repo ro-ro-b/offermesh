@@ -35,9 +35,11 @@ try {
   // truthful posture + service status
   const status = await get('/api/status');
   assert('status v0.3.0', status.body.version === '0.3.0', status.body.version);
+  assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const dual = await get('/api/dual/status');
   assert('dual read_only, no live writes', dual.body.writeMode === 'read_only' && dual.body.liveDualWrites === false && dual.body.publicWrites === false);
+  assert('dual status carries product/engine boundary', dual.body.product === 'revolv' && dual.body.engine === 'offermesh');
 
   // security headers + request id
   assert('security headers present', status.headers.get('x-content-type-options') === 'nosniff' && Boolean(status.headers.get('content-security-policy')) && status.headers.get('x-frame-options') === 'DENY');
@@ -168,6 +170,7 @@ try {
   assert('ops monitor passes', mon.body.ok === true, JSON.stringify(mon.body.checks?.filter((c) => !c.pass)));
   const rdy = await get('/api/ops/readiness');
   const ids = Object.fromEntries(rdy.body.items.map((i) => [i.id, i.status]));
+  assert('readiness: brand merge done', ids.brand_merge === 'done');
   assert('readiness: tenancy/metering done', ids.multi_tenant_model === 'done' && ids.usage_metering === 'done');
   assert('readiness: storage pending without redis env', ids.durable_storage === 'pending');
   assert('readiness: external gate honestly pending', ids.external_review_gate === 'pending');

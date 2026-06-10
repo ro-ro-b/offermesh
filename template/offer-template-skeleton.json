@@ -1,12 +1,12 @@
 {
-  "name": "OfferMesh Offer Token",
-  "slug": "offermesh-offer-token",
+  "name": "Revolv Offer Token",
+  "slug": "revolv-offer-token",
   "schema_version": "dual-template-skeleton-v2",
   "dual_pattern": "Agent Mandates",
   "asset_type": "rights",
   "write_boundary": "Local proof-first MVP; no live DUAL write until operator approval and template readiness are confirmed.",
   "object_model": {
-    "token": "Brand offer token with escrowed incentive and redemption lifecycle",
+    "token": "Revolv brand offer token with escrowed incentive and redemption lifecycle, powered by the OfferMesh engine",
     "standard": "Offer token + redemption receipt",
     "immutable_fields": [
       { "key": "offer_id", "type": "string", "required": true },

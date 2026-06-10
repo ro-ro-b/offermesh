@@ -31,14 +31,14 @@ try {
   if (!up) throw new Error('server did not start');
 
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
-  assert('initialize ok', init.result.serverInfo.name === 'offermesh-agent-gateway');
+  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv');
 
   const tools = await rpc('tools/list');
   assert('14 tools listed', tools.result.tools.length === 14, tools.result.tools.length);
 
   const resources = await rpc('resources/list');
-  assert('disclosure policy resource present', resources.result.resources.some((r) => r.uri === 'offermesh://disclosure-policy'));
-  const policy = await rpc('resources/read', { uri: 'offermesh://disclosure-policy' });
+  assert('disclosure policy resource present', resources.result.resources.some((r) => r.uri === 'revolv://disclosure-policy'));
+  const policy = await rpc('resources/read', { uri: 'revolv://disclosure-policy' });
   assert('disclosure policy readable', JSON.parse(policy.result.contents[0].text).sponsored_field_required === true);
 
   const discover = toolText(await rpc('tools/call', { name: 'discover_offers', arguments: {} }));
@@ -73,6 +73,7 @@ try {
 
   const dual = toolText(await rpc('tools/call', { name: 'get_dual_status', arguments: {} }));
   assert('dual status truthful via MCP', dual.liveDualWrites === false && dual.writeMode === 'read_only');
+  assert('dual status says Revolv/OfferMesh', dual.product === 'revolv' && dual.engine === 'offermesh');
 
   const unknown = await rpc('tools/call', { name: 'not_a_tool', arguments: {} });
   assert('unknown tool errors', Boolean(unknown.error));

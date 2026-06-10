@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OfferMesh — SmartNFT offers for agent-mediated commerce</title>
+<title>Revolv — SmartNFT offers for agent-mediated commerce</title>
 <style>
   :root { --bg:#0b1020; --card:#141b33; --line:#26304f; --text:#e8ecf8; --dim:#9aa6c6; --accent:#5b8cff; --good:#3ecf8e; --warn:#ffb454; --bad:#ff6b81; }
   * { box-sizing:border-box; margin:0; }
@@ -40,16 +40,17 @@
 </head>
 <body>
 <header>
-  <h1>OfferMesh</h1>
+  <h1>Revolv</h1>
   <div>
     <span class="badge good">sponsored = machine-readable</span>
+    <span class="badge">OfferMesh engine</span>
     <span class="badge">read_only DUAL posture</span>
     <span class="badge">rewards simulated</span>
     <span class="badge">no PII in public state</span>
     <span class="badge" id="verBadge">v—</span>
   </div>
 </header>
-<p class="sub">SmartNFT brand offers replacing adverts in agent-mediated commerce — agents discover, evaluate, reserve, and redeem verifiable offers under scoped mandates; brands pay per <b>verified outcome</b>, not per impression.</p>
+<p class="sub">SmartNFT brand offers replacing adverts in agent-mediated commerce — agents discover, evaluate, reserve, and redeem verifiable offers under scoped mandates; brands pay per <b>verified outcome</b>, not per impression. OfferMesh is the SaaS/protocol engine underneath Revolv.</p>
 
 <nav id="tabs">
   <button data-tab="walkthrough" class="active">Walkthrough</button>
@@ -65,6 +66,7 @@
   <div class="grid">
     <div class="card">
       <h2>Reviewer walkthrough (≈90s)</h2>
+      <div class="kv"><b>Brand merge:</b> Revolv is the market-facing product; OfferMesh remains the protocol engine for tenant auth, MCP, proof receipts, metering, and DUAL sync posture.</div>
       <ol class="steps">
         <li><b>Run the autonomous agent</b> — it scores disclosed offers, picks the best within its mandate, redeems, gets verified. Full decision trace.</li>
         <li><b>Run the unsponsored principal</b> — that principal opted out of paid influence; the agent takes no sponsored action. Disclosure made this enforceable.</li>
@@ -83,6 +85,7 @@
       <h2>Live offers</h2>
       <div id="offersWalk"></div>
       <div class="kv" id="dualLine"></div>
+      <div class="kv" id="engineLine"></div>
     </div>
   </div>
 </div>
@@ -191,7 +194,7 @@
 </div>
 
 <footer>
-  Agent surface is MCP (POST /mcp): 14 tools incl. discover_offers · check_eligibility · reserve_offer · redeem_offer · simulate_agent_run · verify_receipt · prepare_dual_sync · queue_dual_sync. Reserve/redeem/simulate fail closed (<code>agent_auth_required</code>) without a verified gateway key; DUAL execution additionally requires an operator token + explicit flag and is mapping-pending in this build. Local demo only — no live DUAL writes.
+  Revolv agent surface is MCP (POST /mcp), powered by the OfferMesh engine: 14 tools incl. discover_offers · check_eligibility · reserve_offer · redeem_offer · simulate_agent_run · verify_receipt · prepare_dual_sync · queue_dual_sync. Reserve/redeem/simulate fail closed (<code>agent_auth_required</code>) without a verified gateway key; DUAL execution additionally requires an operator token + explicit flag and is mapping-pending in this build. Local demo only — no live DUAL writes.
 </footer>
 
 <script>
@@ -226,6 +229,7 @@ async function refreshAll() {
   document.getElementById('offersWalk').innerHTML = offers.offers.map(offerHtml).join('');
   const d = status.dual;
   document.getElementById('dualLine').innerHTML = `DUAL: <b>${d.targetNetwork}</b> · writeMode=<b>${d.writeMode}</b> · liveDualWrites=<b>${d.liveDualWrites}</b> · mappingPending=<b>${d.mainnetMappingPending}</b>`;
+  document.getElementById('engineLine').innerHTML = `Product: <b>${status.product || d.product || 'revolv'}</b> · engine: <b>${status.engine || d.engine || 'offermesh'}</b>`;
   out('dualStatus', d);
 
   document.getElementById('programs').innerHTML = programs.programs.map((p) =>
