@@ -21,7 +21,7 @@ const toolText = (resp) => JSON.parse(resp.result.content[0].text);
 
 const child = spawn(process.execPath, ['server.mjs'], {
   cwd: new URL('..', import.meta.url).pathname,
-  env: { ...process.env, PORT: String(PORT), OFFERMESH_GATEWAY_KEY: 'mcp-smoke-key', OFFERMESH_EPHEMERAL: '1' },
+  env: { ...process.env, PORT: String(PORT), OFFERMESH_GATEWAY_KEY: 'mcp-smoke-key', OFFERMESH_EPHEMERAL: '1', OFFERMESH_ADMIN_TOKEN: 'mcp-admin' },
   stdio: 'ignore'
 });
 
@@ -99,6 +99,15 @@ try {
   assert('queue_dual_sync without auth -> agent_auth_required', qNoAuth.status === 'agent_auth_required');
   const q = toolText(await rpc('tools/call', { name: 'queue_dual_sync', arguments: { receipt_id: redAuth.receipt.id } }, auth));
   assert('queue_dual_sync queues verified receipt', q.status === 'queued');
+
+  // ---- v0.3.0: per-tenant gateway key works on MCP ----
+  const tnt = await fetch(BASE + '/api/admin/tenants', { method: 'POST', headers: { 'content-type': 'application/json', 'x-offermesh-admin-token': 'mcp-admin' }, body: JSON.stringify({ name: 'MCP Tenant' }) }).then((r) => r.json());
+  const tAuth = { 'x-offermesh-gateway-key': tnt.gateway_key };
+  const tSim = toolText(await rpc('tools/call', { name: 'simulate_agent_run', arguments: { mandate_id: seedInfo.no_sponsored_mandate_id, agent_id: 'agent:tenant-mcp' } }, tAuth));
+  assert('tenant gateway key authorizes MCP tools', tSim.outcome === 'no_offers_within_principal_policy');
+  const wrongAuth = { 'x-offermesh-gateway-key': 'omg_' + 'a'.repeat(48) };
+  const wrongSim = toolText(await rpc('tools/call', { name: 'simulate_agent_run', arguments: { mandate_id: seedInfo.no_sponsored_mandate_id, agent_id: 'agent:x' } }, wrongAuth));
+  assert('unknown tenant key fails closed', wrongSim.status === 'agent_auth_required');
 } catch (err) {
   failures++;
   console.error('FAIL mcp smoke crashed:', err.message);

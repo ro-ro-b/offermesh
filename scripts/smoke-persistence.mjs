@@ -51,7 +51,8 @@ try {
   if (!(await waitUp())) throw new Error('server did not restart');
 
   const status = await get('/api/status');
-  assert('state restored on restart', status.persistence.restored === true);
+  assert('state restored on restart', status.storage.restored === true);
+  assert('tenants survived restart', status.counts.tenants >= 1);
   const afterOffer = await get('/api/offers/' + offerId);
   assert('settled state survived restart', afterOffer.state === 'settled');
   const receiptAfter = await get('/api/receipts/' + red.receipt.id);

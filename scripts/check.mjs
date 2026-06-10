@@ -104,5 +104,43 @@ const execAuthed = executeDualSync(store3, q.queue_id, { operatorTokenHeader: 'c
 assert('fully authorized execute is truthfully mapping-pending, no write', execAuthed.status === 'blocked_mapping_pending' && execAuthed.write_executed === false);
 delete process.env.OFFERMESH_OPERATOR_TOKEN;
 
+console.log('Tenancy + metering + rate limit (v0.3.0):');
+{
+  const { createTenant, resolveTenantByApiKey, resolveTenantByGatewayKey, rotateTenantKeys, setTenantStatus } = await import('../lib/tenants.mjs');
+  const { meter, tenantUsage, billingRecord } = await import('../lib/metering.mjs');
+  const { rateLimit } = await import('../lib/ratelimit.mjs');
+  const { monitor, readiness } = await import('../lib/ops.mjs');
+  const s = createStore();
+  seed(s);
+  const issued = createTenant(s, { name: 'Check Co' });
+  assert('tenant keys issued once with prefixes', issued.api_key.startsWith('omk_') && issued.gateway_key.startsWith('omg_'));
+  assert('raw keys not stored', !JSON.stringify([...s.tenants.values()]).includes(issued.api_key));
+  assert('api key resolves tenant', resolveTenantByApiKey(s, issued.api_key)?.id === issued.tenant.id);
+  assert('gateway key resolves tenant', resolveTenantByGatewayKey(s, issued.gateway_key)?.id === issued.tenant.id);
+  assert('wrong key resolves nothing', resolveTenantByApiKey(s, 'omk_' + 'b'.repeat(48)) === null);
+  setTenantStatus(s, issued.tenant.id, 'suspended');
+  assert('suspended tenant flagged blocked', resolveTenantByApiKey(s, issued.api_key)?.blocked === true);
+  setTenantStatus(s, issued.tenant.id, 'active');
+  const rotated = rotateTenantKeys(s, issued.tenant.id);
+  assert('rotation invalidates old key', resolveTenantByApiKey(s, issued.api_key) === null && resolveTenantByApiKey(s, rotated.api_key)?.id === issued.tenant.id);
+
+  meter(s, issued.tenant.id, 'verified_outcomes');
+  meter(s, issued.tenant.id, 'outcome_spend', 30);
+  const u = tenantUsage(s, issued.tenant.id);
+  assert('metering accumulates', u.months[0].verified_outcomes === 1 && u.months[0].outcome_spend === 30);
+  const bill = billingRecord(s, issued.tenant.id, new Date().toISOString().slice(0, 7));
+  assert('billing record hashed, no processor', bill.record_hash.startsWith('0x') && bill.payment_processor === 'none_excluded_this_phase');
+
+  const fakeReq = { headers: { 'x-forwarded-for': 'check-client' }, socket: {} };
+  let blocked = false;
+  for (let i = 0; i < 100; i++) { if (!rateLimit(fakeReq, 'write').allowed) { blocked = true; break; } }
+  assert('rate limiter blocks after burst', blocked);
+
+  const mon = monitor(s);
+  assert('ops monitor green on healthy store', mon.ok === true, JSON.stringify(mon.checks.filter((c) => !c.pass)));
+  const rdy = readiness(s);
+  assert('readiness keeps external gate pending', rdy.items.find((i) => i.id === 'external_review_gate').status === 'pending');
+}
+
 if (failures > 0) { console.error(`\ncheck FAILED (${failures})`); process.exit(1); }
 console.log('\ncheck PASSED');
