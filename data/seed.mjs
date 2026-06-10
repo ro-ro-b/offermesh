@@ -1,12 +1,29 @@
-// Seed data — two demo brands/programs, four offers, three mandates (good, narrow, sponsored-opt-out).
+// Seed data — demo tenant workspace, two demo brands/programs, four offers, three mandates.
+// Demo tenant keys derive from env so the public demo UI can exercise the loop; real tenants
+// get random keys via the admin plane and are never embedded anywhere.
 import { createBrand, createProgram, createOffer } from '../lib/offers.mjs';
 import { createMandate } from '../lib/mandates.mjs';
+import { newId, sha256, logEvent } from '../lib/store.mjs';
 
-export function seed(store) {
+export function seed(store, { demoGatewayKey = null, demoConsoleKey = null } = {}) {
+  const demoTenant = {
+    id: newId('tnt'),
+    name: 'Demo Workspace',
+    slug: 'demo-workspace',
+    api_key_hash: sha256(demoConsoleKey || 'demo-console-key'),
+    gateway_key_hash: sha256(demoGatewayKey || 'demo-gateway-key'),
+    status: 'active',
+    demo: true,
+    created_at: new Date().toISOString()
+  };
+  store.tenants.set(demoTenant.id, demoTenant);
+  logEvent(store, 'tenant-created', demoTenant.id, 'active', { name: demoTenant.name, demo: true });
+
   const aurora = createBrand(store, { name: 'Aurora Audio', ref: 'brand:aurora-audio' });
   const verde = createBrand(store, { name: 'Verde Outdoor', ref: 'brand:verde-outdoor' });
 
   const program = createProgram(store, {
+    tenantId: demoTenant.id,
     brandRef: aurora.id,
     name: 'Aurora Audio — Agent Launch Offers',
     rewardUnit: 'loyalty_credit',
@@ -15,6 +32,7 @@ export function seed(store) {
   });
 
   const program2 = createProgram(store, {
+    tenantId: demoTenant.id,
     brandRef: verde.id,
     name: 'Verde Outdoor — Verified Outcome Pilot',
     rewardUnit: 'cashback_token',
@@ -78,5 +96,5 @@ export function seed(store) {
     expiresAt: '2027-01-01T00:00:00.000Z'
   });
 
-  return { brands: [aurora, verde], program, program2, offers, goodMandate, narrowMandate, noSponsoredMandate };
+  return { demoTenant, brands: [aurora, verde], program, program2, offers, goodMandate, narrowMandate, noSponsoredMandate };
 }
