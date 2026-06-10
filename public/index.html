@@ -183,6 +183,8 @@
       <h2>Proof event log (hashed, append-only)</h2>
       <button class="ghost" onclick="loadEvents()">Refresh events</button>
       <button class="ghost" onclick="loadBundle()">Source review bundle</button>
+      <button class="ghost" onclick="loadReadiness()">Readiness scorecard</button>
+      <button class="ghost" onclick="loadMonitor()">Ops monitor</button>
       <pre id="eventsOut">—</pre>
     </div>
   </div>
@@ -197,8 +199,10 @@ const j = (r) => r.json();
 const post = (u, b, h={}) => fetch(u, { method:'POST', headers:{'content-type':'application/json', ...h}, body:JSON.stringify(b) }).then(j);
 const get = (u) => fetch(u).then(j);
 const out = (el, v) => document.getElementById(el).textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2);
-// Demo gateway key (local reviewer demo only — a hosted build would never ship a key to the browser).
+// Demo-tenant keys only (public by design for the demo workspace; real tenants get random
+// admin-issued keys that are never embedded anywhere).
 const KEY = { 'x-offermesh-gateway-key': 'demo-gateway-key' };
+const CONSOLE_KEY = { 'x-offermesh-tenant-key': 'demo-console-key' };
 let SI = null;
 
 // tabs
@@ -260,7 +264,7 @@ function fillSelect(id, pairs) {
 
 async function freshOfferId() {
   const m = await post('/api/offers', { programId: SI.program_id, title: 'Loop demo offer', category: 'audio',
-    merchant: 'brand:aurora-audio', price: 150, incentiveValue: 15, incentiveType: 'discount' });
+    merchant: 'brand:aurora-audio', price: 150, incentiveValue: 15, incentiveType: 'discount' }, CONSOLE_KEY);
   return m.id;
 }
 
@@ -318,15 +322,15 @@ async function man(step) {
 
 // brand tab
 async function createProgram() {
-  out('brandOut', await post('/api/programs', { brandRef: document.getElementById('pBrand').value, name: document.getElementById('pName').value, budgetEscrow: Number(document.getElementById('pBudget').value) }));
+  out('brandOut', await post('/api/programs', { brandRef: document.getElementById('pBrand').value, name: document.getElementById('pName').value, budgetEscrow: Number(document.getElementById('pBudget').value) }, CONSOLE_KEY));
   refreshAll();
 }
 async function mintOffer() {
-  out('brandOut', await post('/api/offers', { programId: document.getElementById('oProgram').value, title: document.getElementById('oTitle').value, category: 'general', price: Number(document.getElementById('oPrice').value), incentiveValue: Number(document.getElementById('oVal').value) }));
+  out('brandOut', await post('/api/offers', { programId: document.getElementById('oProgram').value, title: document.getElementById('oTitle').value, category: 'general', price: Number(document.getElementById('oPrice').value), incentiveValue: Number(document.getElementById('oVal').value) }, CONSOLE_KEY));
   refreshAll();
 }
-async function progAct(id, act) { out('brandOut', await post(`/api/programs/${id}/${act}`, {})); refreshAll(); }
-async function topUp(id) { out('brandOut', await post(`/api/programs/${id}/topup`, { amount: 100 })); refreshAll(); }
+async function progAct(id, act) { out('brandOut', await post(`/api/programs/${id}/${act}`, {}, CONSOLE_KEY)); refreshAll(); }
+async function topUp(id) { out('brandOut', await post(`/api/programs/${id}/topup`, { amount: 100 }, CONSOLE_KEY)); refreshAll(); }
 
 // principal tab
 async function signMandate() {
@@ -358,6 +362,8 @@ async function tryExecuteNoToken() {
   out('dualOut', await post('/api/dual/execute/' + first.id, { execute_live_dual_write: true }));
 }
 async function loadEvents() { out('eventsOut', await get('/api/events?limit=40')); }
+async function loadReadiness() { const r = await get('/api/ops/readiness'); out('eventsOut', r.items.map(i => `${i.status.toUpperCase().padEnd(9)} ${i.id} — ${i.detail}`).join('\n')); }
+async function loadMonitor() { const m = await get('/api/ops/monitor'); out('eventsOut', { ok: m.ok, passed: m.passed, failed: m.failed, checks: m.checks.map(c => `${c.pass ? 'ok  ' : 'FAIL'} ${c.name} ${c.detail || ''}`) }); }
 async function loadBundle() {
   const b = await get('/api/source/review-bundle');
   out('eventsOut', { file_count: b.file_count, bundle_hash: b.bundle_hash, files: b.files.map((f) => `${f.path} ${f.sha256.slice(0, 18)}…`) });
