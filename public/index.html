@@ -570,6 +570,40 @@
     background:var(--teal-500);
   }
   .proof-card.warn li::before { background:var(--warn); }
+  .full { grid-column:1 / -1; }
+  .metric-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+    margin:12px 0;
+  }
+  .metric-card {
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    background:#FBFDFD;
+  }
+  .metric-card strong {
+    display:block;
+    color:var(--ink-700);
+    font-size:22px;
+    line-height:1.1;
+  }
+  .metric-card span {
+    color:var(--ink-400);
+    font-size:12px;
+  }
+  .wizard-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+  .linkout {
+    color:var(--teal-600);
+    font-weight:800;
+    text-decoration:none;
+  }
+  .linkout:hover { color:var(--teal-700); text-decoration:underline; }
   @media (max-width:1080px) {
     .hero { grid-template-columns:1fr; }
     .status-card { max-width:680px; }
@@ -578,7 +612,7 @@
   }
   @media (max-width:900px) {
     .grid { grid-template-columns:1fr; }
-    .persona-grid, .proof-grid { grid-template-columns:1fr; }
+    .persona-grid, .proof-grid, .metric-grid, .wizard-grid { grid-template-columns:1fr; }
   }
   @media (max-width:720px) {
     .shell { --shell-gutter:16px; padding-bottom:64px; }
@@ -623,7 +657,7 @@
   <div class="topbar-status">
     <span class="badge good"><span class="dot"></span> publicWrites=false</span>
     <span class="badge">OfferMesh engine</span>
-    <span class="badge">MCP 21 tools</span>
+    <span class="badge">MCP 26 tools</span>
     <span class="badge" id="verBadge">v-</span>
   </div>
 </header>
@@ -741,6 +775,13 @@
 <!-- WALKTHROUGH -->
 <div class="tab active" id="tab-walkthrough">
   <div class="grid">
+    <div class="card full">
+      <h2>Partner demo mode</h2>
+      <div class="kv"><b>One run:</b> create a fresh brand offer, show the reference agent redeeming it, prove sponsored opt-out, reject a tampered receipt, and return the brand outcome report.</div>
+      <button class="act" onclick="runPartnerDemoMode()">Run partner demo mode</button>
+      <button class="ghost" onclick="loadLatestProofRoom()">Latest proof room</button>
+      <pre id="demoOut">Partner demo output appears here.</pre>
+    </div>
     <div class="card">
       <h2>Reviewer walkthrough (≈90s)</h2>
       <div class="kv"><b>Brand merge:</b> Revolv is the market-facing product; OfferMesh remains the protocol engine for tenant auth, MCP, proof receipts, metering, and DUAL sync posture.</div>
@@ -772,6 +813,18 @@
 <!-- AGENT -->
 <div class="tab" id="tab-agent">
   <div class="grid">
+    <div class="card full">
+      <h2>Agent marketplace view</h2>
+      <div class="kv">This is what agent platforms need: structured offers, sponsorship disclosure, hashes, policy gates, and MCP action path.</div>
+      <button class="act" onclick="loadMarketplace()">Refresh marketplace</button>
+      <div id="marketplace"></div>
+    </div>
+    <div class="card full">
+      <h2>Reference agent integration</h2>
+      <div class="kv">A partner can connect an agent to MCP reads publicly, then use a gateway key only for reserve/redeem/simulate paths.</div>
+      <button class="ghost" onclick="loadReferenceAgent()">Reference agent guide</button>
+      <pre id="referenceAgentOut">—</pre>
+    </div>
     <div class="card">
       <h2>Run agent under a mandate</h2>
       <select id="agentMandate"></select>
@@ -796,6 +849,26 @@
 <!-- BRAND -->
 <div class="tab" id="tab-brand">
   <div class="grid">
+    <div class="card full">
+      <h2>Create offer</h2>
+      <div class="kv"><b>Guided brand path:</b> create the brand, budget-capped program, machine-readable offer, agent preview, and proof-room link in one step.</div>
+      <div class="wizard-grid">
+        <input id="wBrand" placeholder="Brand name" value="Partner Coffee">
+        <input id="wOffer" placeholder="Offer title" value="Free upgrade for verified agent booking">
+        <input id="wCategory" placeholder="Category" value="travel">
+        <input id="wPrice" placeholder="Customer price" type="number" value="120">
+        <input id="wValue" placeholder="Incentive value" type="number" value="18">
+        <input id="wBudget" placeholder="Budget cap" type="number" value="360">
+      </div>
+      <input id="wTerms" placeholder="Proof terms" value="18-unit upgrade credit released only after verified booking receipt">
+      <button class="act" onclick="guidedCreateOffer()">Create offer</button>
+      <button class="ghost" onclick="loadDashboard()">Refresh dashboard</button>
+      <pre id="wizardOut">Created offer, agent preview, and proof-room link appear here.</pre>
+    </div>
+    <div class="card full">
+      <h2>Brand dashboard</h2>
+      <div id="brandDashboard"></div>
+    </div>
     <div class="card">
       <h2>Programs</h2>
       <div id="programs"></div>
@@ -844,10 +917,20 @@
 
 <!-- VERIFIER -->
 <div class="tab" id="tab-verifier">
-  <div class="card">
-    <h2>Redemption receipts</h2>
-    <div id="receipts"></div>
-    <pre id="verOut">Select a receipt action.</pre>
+  <div class="grid">
+    <div class="card">
+      <h2>Redemption receipts</h2>
+      <div id="receipts"></div>
+      <pre id="verOut">Select a receipt action.</pre>
+    </div>
+    <div class="card">
+      <h2>Shareable proof room</h2>
+      <div class="kv">Load any offer, receipt, or program id. The public page shows terms, disclosure, verifier status, brand report, and the no-live-write boundary.</div>
+      <input id="proofRoomId" placeholder="Offer, receipt, or program id">
+      <button class="act" onclick="loadProofRoom()">Load proof room</button>
+      <button class="ghost" onclick="openProofRoom()">Open public proof room</button>
+      <pre id="proofRoomOut">—</pre>
+    </div>
   </div>
 </div>
 
@@ -871,6 +954,7 @@
       <button class="ghost" onclick="loadMarketPack()">Market pack</button>
       <button class="ghost" onclick="loadDualPlan()">DUAL plan</button>
       <button class="ghost" onclick="loadProdReady()">Production readiness</button>
+      <button class="ghost" onclick="loadPartnerHardening()">Partner hardening</button>
       <button class="ghost" onclick="loadIdentity()">Public identity</button>
       <button class="ghost" onclick="loadRunbook()">Runbook</button>
       <pre id="eventsOut">—</pre>
@@ -881,7 +965,7 @@
 <footer>
   <span>2026 © DUAL</span>
   <span>Revolv agent surface: MCP <code>POST /mcp</code></span>
-  <span>OfferMesh engine: 21 tools including discovery, verification, DUAL plan, production-readiness, customer-session drill, and incident-runbook surfaces.</span>
+  <span>OfferMesh engine: 26 tools including marketplace, dashboard, proof room, reference-agent, and partner-hardening surfaces.</span>
   <span>Reserve/redeem/simulate fail closed with <code>agent_auth_required</code>; DUAL execution requires operator token plus explicit flag and remains mapping-pending. Partner-ready pilot language requires the broad Cowork gate; production-ready remains a stricter gate.</span>
 </footer>
 
@@ -906,7 +990,21 @@ document.getElementById('tabs').addEventListener('click', (e) => {
 
 function offerHtml(o) {
   return `<div class="offer"><span class="t">${o.title}</span><span class="state ${o.state}">${o.state}</span>
-    <div class="m">price ${o.price} · incentive ${o.incentive_value} (${o.incentive_type}) · sponsored=${o.sponsored} · ${o.id}</div></div>`;
+    <div class="m">price ${o.price} · incentive ${o.incentive_value} (${o.incentive_type}) · sponsored=${o.sponsored} · ${o.id}</div>
+    <a class="linkout" href="/proof/${encodeURIComponent(o.id)}" target="_blank" rel="noopener">Proof room</a></div>`;
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function metricCard(label, value) {
+  return `<div class="metric-card"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+}
+
+function setProofRoom(id) {
+  document.getElementById('proofRoomId').value = id || '';
+  if (id) loadProofRoom();
 }
 
 async function refreshAll() {
@@ -940,13 +1038,14 @@ async function refreshAll() {
      <div class="m">principal ${m.principal_ref} · scope [${m.scope.join(', ')}] · ceiling ${m.spend_ceiling} (used ${m.spend_used}) · sponsored ${m.allow_sponsored ? 'allowed' : 'EXCLUDED'}</div>
      ${m.state === 'active' ? `<button class="ghost" onclick="revoke('${m.id}')">Revoke</button>` : ''}</div>`).join('');
 
-  document.getElementById('receipts').innerHTML = receipts.receipts.map((r) =>
-    `<div class="item"><span class="t">${r.id}</span><span class="state ${r.status}">${r.status}</span>
-     <div class="m">offer ${r.offer_id} · hash ${r.receipt_hash.slice(0, 26)}… · verified=${r.verified}</div>
-     <button class="ghost" onclick="verifyR('${r.id}')">Verify</button>
-     <button class="ghost" onclick="disputeR('${r.id}')">Dispute</button>
-     <button class="ghost" onclick="prepDual('${r.id}')">DUAL payload</button>
-     <button class="ghost" onclick="queueDual('${r.id}')">Queue DUAL sync</button></div>`).join('') || 'No receipts yet — run the agent.';
+	  document.getElementById('receipts').innerHTML = receipts.receipts.map((r) =>
+	    `<div class="item"><span class="t">${r.id}</span><span class="state ${r.status}">${r.status}</span>
+	     <div class="m">offer ${r.offer_id} · hash ${r.receipt_hash.slice(0, 26)}… · verified=${r.verified}</div>
+	     <button class="ghost" onclick="verifyR('${r.id}')">Verify</button>
+	     <button class="ghost" onclick="disputeR('${r.id}')">Dispute</button>
+	     <button class="ghost" onclick="setProofRoom('${r.id}')">Proof room</button>
+	     <button class="ghost" onclick="prepDual('${r.id}')">DUAL payload</button>
+	     <button class="ghost" onclick="queueDual('${r.id}')">Queue DUAL sync</button></div>`).join('') || 'No receipts yet — run the agent.';
 
   // selects
   fillSelect('agentMandate', mandates.mandates.filter((m) => m.state === 'active').map((m) => [m.id, `${m.agent_id} (${m.allow_sponsored ? 'sponsored ok' : 'no sponsored'})`]));
@@ -954,8 +1053,11 @@ async function refreshAll() {
   fillSelect('manMandate', mandates.mandates.map((m) => [m.id, m.agent_id]));
   fillSelect('pBrand', (await get('/api/brands')).brands.map((b) => [b.id, b.name]));
   fillSelect('oProgram', programs.programs.map((p) => [p.id, p.name]));
-  fillSelect('rProgram', programs.programs.map((p) => [p.id, p.name]));
-}
+	  fillSelect('rProgram', programs.programs.map((p) => [p.id, p.name]));
+	  if (!document.getElementById('proofRoomId').value && offers.offers[0]) document.getElementById('proofRoomId').value = offers.offers[0].id;
+	  renderDashboard(await get('/api/product/brand-dashboard'));
+	  renderMarketplace(await get('/api/product/agent-marketplace'));
+	}
 function fillSelect(id, pairs) {
   const el = document.getElementById(id);
   const cur = el.value;
@@ -1003,6 +1105,24 @@ async function showEpoch() {
 }
 
 // agent tab
+async function loadMarketplace() {
+  renderMarketplace(await get('/api/product/agent-marketplace'));
+}
+function renderMarketplace(m) {
+  const el = document.getElementById('marketplace');
+  if (!el) return;
+  const offers = (m.offers || []).slice(0, 8).map((o) =>
+    `<div class="item"><span class="t">${esc(o.title)}</span><span class="state ${esc(o.state)}">${esc(o.state)}</span>
+     <div class="m">${esc(o.brand_name)} · incentive ${esc(o.incentive_value)} · sponsored=${esc(o.sponsored)} · terms ${esc((o.terms_hash || '').slice(0, 18))}…</div>
+     <div class="m">MCP: ${esc((o.mcp_tools || []).join(' → '))}</div>
+     <button class="ghost" onclick="setProofRoom('${esc(o.id)}')">Proof room</button></div>`).join('');
+  el.innerHTML = `<div class="metric-grid">${metricCard('Agent-visible offers', m.count || 0)}${metricCard('Sponsored disclosure', 'machine-readable')}${metricCard('Buyer controls', (m.principal_controls || []).length)}</div>${offers || '<div class="kv">No active offers yet.</div>'}`;
+}
+
+async function loadReferenceAgent() {
+  out('referenceAgentOut', await get('/api/product/reference-agent'));
+}
+
 async function agentRun() {
   out('agentOut', await post('/api/agent/simulate', { mandateId: document.getElementById('agentMandate').value, agentId: 'agent:ui-run' }, KEY));
   refreshAll();
@@ -1022,6 +1142,36 @@ async function man(step) {
 }
 
 // brand tab
+async function guidedCreateOffer() {
+  const body = {
+    brandName: document.getElementById('wBrand').value,
+    offerTitle: document.getElementById('wOffer').value,
+    category: document.getElementById('wCategory').value,
+    price: Number(document.getElementById('wPrice').value),
+    incentiveValue: Number(document.getElementById('wValue').value),
+    budgetEscrow: Number(document.getElementById('wBudget').value),
+    terms: document.getElementById('wTerms').value
+  };
+  const res = await post('/api/product/create-offer-flow', body, CONSOLE_KEY);
+  out('wizardOut', res);
+  if (res.offer?.id) document.getElementById('proofRoomId').value = res.offer.id;
+  refreshAll();
+}
+
+async function loadDashboard() {
+  renderDashboard(await get('/api/product/brand-dashboard'));
+}
+function renderDashboard(d) {
+  const el = document.getElementById('brandDashboard');
+  if (!el) return;
+  const t = d.totals || {};
+  const programs = (d.programs || []).slice(-5).map((p) =>
+    `<div class="item"><span class="t">${esc(p.program_id || p.name || 'Program')}</span><span class="state">${esc(p.billing_model || 'per_verified_outcome')}</span>
+     <div class="m">verified ${esc(p.verified_outcomes || 0)} · spend ${esc(p.outcome_spend || 0)} · impressions billed ${esc(p.impressions_billed || 0)}</div></div>`).join('');
+  const proofRooms = (d.proof_rooms || []).map((p) => `<a class="linkout" href="${esc(p.path)}" target="_blank" rel="noopener">${esc(p.id)}</a>`).join('');
+  el.innerHTML = `<div class="metric-grid">${metricCard('Active programs', t.active_programs || 0)}${metricCard('Offers', t.offers || 0)}${metricCard('Verified outcomes', t.verified_outcomes || 0)}${metricCard('Outcome spend', t.outcome_spend || 0)}${metricCard('Impressions billed', d.impressions_billed || 0)}${metricCard('Rejected/disputed', t.rejected_or_disputed_receipts || 0)}</div>${programs || '<div class="kv">No programs yet.</div>'}<div class="kv"><b>Proof rooms:</b> ${proofRooms || 'create an offer first'}</div>`;
+}
+
 async function createProgram() {
   out('brandOut', await post('/api/programs', { brandRef: document.getElementById('pBrand').value, name: document.getElementById('pName').value, budgetEscrow: Number(document.getElementById('pBudget').value) }, CONSOLE_KEY));
   refreshAll();
@@ -1051,6 +1201,33 @@ async function revoke(id) { out('prinOut', await post(`/api/mandates/${id}/revok
 // verifier tab
 async function verifyR(id) { out('verOut', await post('/api/verify', { receiptId: id })); refreshAll(); }
 async function disputeR(id) { out('verOut', await post('/api/dispute', { receiptId: id })); refreshAll(); }
+async function loadProofRoom() {
+  let id = document.getElementById('proofRoomId').value;
+  if (!id) {
+    const offers = await get('/api/offers');
+    id = offers.offers?.[0]?.id || '';
+    document.getElementById('proofRoomId').value = id;
+  }
+  if (!id) return out('proofRoomOut', 'No offer, receipt, or program id available yet.');
+  out('proofRoomOut', await get('/api/product/proof-room/' + encodeURIComponent(id)));
+}
+function openProofRoom() {
+  const id = document.getElementById('proofRoomId').value;
+  if (id) window.open('/proof/' + encodeURIComponent(id), '_blank', 'noopener');
+}
+async function loadLatestProofRoom() {
+  const offers = await get('/api/offers');
+  const latest = offers.offers?.at(-1);
+  if (latest) setProofRoom(latest.id);
+  else out('proofRoomOut', 'No offers available yet.');
+}
+
+async function runPartnerDemoMode() {
+  const res = await post('/api/product/partner-demo', { brandName: 'Partner Demo Brand' }, { ...CONSOLE_KEY, ...KEY });
+  out('demoOut', res);
+  if (res.hero_offer?.id) document.getElementById('proofRoomId').value = res.hero_offer.id;
+  refreshAll();
+}
 
 // proof tab
 async function prepDual(id) { out('verOut', await get('/api/dual/prepare/' + id)); }
@@ -1069,6 +1246,7 @@ async function loadHardening() { out('eventsOut', await get('/api/ops/hardening'
 async function loadMarketPack() { out('eventsOut', await get('/api/product/market-pack')); }
 async function loadDualPlan() { out('eventsOut', await get('/api/dual/live-readback-plan')); }
 async function loadProdReady() { out('eventsOut', await get('/api/ops/production-readiness')); }
+async function loadPartnerHardening() { out('eventsOut', await get('/api/ops/partner-hardening')); }
 async function loadIdentity() { out('eventsOut', await get('/api/product/public-identity')); }
 async function loadRunbook() { out('eventsOut', await get('/api/ops/incident-runbook')); }
 async function loadBundle() {

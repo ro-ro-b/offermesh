@@ -32,18 +32,23 @@ try {
   if (!up) throw new Error('server did not start');
 
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
-  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.5.3');
+  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.6.0');
 
   const tools = await rpc('tools/list');
-  assert('21 tools listed', tools.result.tools.length === 21, tools.result.tools.length);
+  assert('26 tools listed', tools.result.tools.length === 26, tools.result.tools.length);
+  assert('v0.6.0 product tools present', ['get_agent_marketplace', 'get_brand_dashboard', 'get_proof_room', 'get_reference_agent_guide', 'get_partner_hardening_plan'].every((name) => tools.result.tools.some((t) => t.name === name)));
 
   const resources = await rpc('resources/list');
+  assert('15 resources listed', resources.result.resources.length === 15, resources.result.resources.length);
   assert('disclosure policy resource present', resources.result.resources.some((r) => r.uri === 'revolv://disclosure-policy'));
-  assert('v0.5.x resources present', ['revolv://market-pack', 'revolv://dual-live-readback-plan', 'revolv://saas-hardening', 'revolv://production-readiness', 'revolv://public-identity', 'revolv://customer-session-drill', 'revolv://incident-runbook'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
+  assert('readiness resources present', ['revolv://market-pack', 'revolv://dual-live-readback-plan', 'revolv://saas-hardening', 'revolv://production-readiness', 'revolv://public-identity', 'revolv://customer-session-drill', 'revolv://incident-runbook'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
+  assert('v0.6.0 product resources present', ['revolv://agent-marketplace', 'revolv://brand-dashboard', 'revolv://reference-agent', 'revolv://partner-hardening'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
   const policy = await rpc('resources/read', { uri: 'revolv://disclosure-policy' });
   assert('disclosure policy readable', JSON.parse(policy.result.contents[0].text).sponsored_field_required === true);
   const marketResource = await rpc('resources/read', { uri: 'revolv://market-pack' });
   assert('market pack resource readable', JSON.parse(marketResource.result.contents[0].text).product === 'Revolv');
+  const agentResource = await rpc('resources/read', { uri: 'revolv://agent-marketplace' });
+  assert('agent marketplace resource readable', JSON.parse(agentResource.result.contents[0].text).status === 'agent_marketplace_ready');
 
   const discover = toolText(await rpc('tools/call', { name: 'discover_offers', arguments: {} }));
   assert('discover returns sponsored offers', discover.count >= 2 && discover.offers.every((o) => o.sponsored === true));
@@ -51,6 +56,8 @@ try {
 
   const offer = toolText(await rpc('tools/call', { name: 'get_offer', arguments: { offer_id: offerId } }));
   assert('get_offer has provenance hashes', offer.source_hash.startsWith('0x') && offer.terms_hash.startsWith('0x'));
+  const agentMarket = toolText(await rpc('tools/call', { name: 'get_agent_marketplace', arguments: {} }));
+  assert('agent marketplace tool returns action path', agentMarket.status === 'agent_marketplace_ready' && agentMarket.offers[0].mcp_tools.includes('redeem_offer'));
 
   // seed mandate ids via REST seed-info (same server)
   const seedInfo = await fetch(BASE + '/api/seed-info').then((r) => r.json());
@@ -74,6 +81,8 @@ try {
 
   const verify = toolText(await rpc('tools/call', { name: 'verify_receipt', arguments: { receipt_id: redAuth.receipt.id } }));
   assert('verify settles via MCP', verify.verified === true);
+  const proofRoom = toolText(await rpc('tools/call', { name: 'get_proof_room', arguments: { id: redAuth.receipt.id } }));
+  assert('proof room tool is read-only package', proofRoom.status === 'proof_room_ready' && proofRoom.verifier.verified === true && proofRoom.dual.liveDualWrites === false);
 
   const dual = toolText(await rpc('tools/call', { name: 'get_dual_status', arguments: {} }));
   assert('dual status truthful via MCP', dual.liveDualWrites === false && dual.writeMode === 'read_only');
@@ -120,6 +129,12 @@ try {
   assert('customer session drill tool returns evidence checklist', drill.required_evidence.length >= 4);
   const runbook = toolText(await rpc('tools/call', { name: 'get_incident_runbook', arguments: {} }));
   assert('incident runbook tool returns fail-closed paths', runbook.fail_closed_paths.includes('OIDC when configured'));
+  const brandDashboard = toolText(await rpc('tools/call', { name: 'get_brand_dashboard', arguments: {} }));
+  assert('brand dashboard tool returns zero impressions billed', brandDashboard.status === 'brand_dashboard_ready' && brandDashboard.impressions_billed === 0);
+  const referenceAgent = toolText(await rpc('tools/call', { name: 'get_reference_agent_guide', arguments: {} }));
+  assert('reference agent guide tool returns MCP loop', referenceAgent.loop.includes('discover_offers') && referenceAgent.required_auth.live_dual_execution.includes('operator-gated'));
+  const partnerHardening = toolText(await rpc('tools/call', { name: 'get_partner_hardening_plan', arguments: {} }));
+  assert('partner hardening tool keeps claim blocked', partnerHardening.status === 'partner_hardening_plan_ready' && partnerHardening.partner_ready_claim_allowed === false);
 
   // ---- per-tenant gateway key works on MCP ----
   const tnt = await fetch(BASE + '/api/admin/tenants', { method: 'POST', headers: { 'content-type': 'application/json', 'x-offermesh-admin-token': 'mcp-admin' }, body: JSON.stringify({ name: 'MCP Tenant' }) }).then((r) => r.json());

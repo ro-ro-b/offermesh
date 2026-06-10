@@ -1,4 +1,4 @@
-// Full-loop REST smoke against a spawned server instance — v0.5.3 partner story UX + claim lane included.
+// Full-loop REST smoke against a spawned server instance — v0.6.0 partner product supercharge included.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -36,12 +36,13 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.5.3', status.body.version === '0.5.3', status.body.version);
+  assert('status v0.6.0', status.body.version === '0.6.0', status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const revolvPage = await getText('/revolv');
   assert('/revolv public route serves DUAL UI standard', revolvPage.code === 200 && revolvPage.body.includes('<h1>Revolv</h1>') && revolvPage.body.includes('DUAL UI standard'));
   assert('/revolv public route explains partner story', revolvPage.body.includes('Replace ad inventory with a proof-backed offer loop.') && revolvPage.body.includes('What a partner can test today'));
+  assert('/revolv public route exposes product supercharge', ['Partner demo mode', 'Create offer', 'Agent marketplace view', 'Shareable proof room', 'MCP 26 tools'].every((text) => revolvPage.body.includes(text)));
   const dual = await get('/api/dual/status');
   assert('dual read_only, no live writes', dual.body.writeMode === 'read_only' && dual.body.liveDualWrites === false && dual.body.publicWrites === false);
   assert('dual status carries product/engine boundary', dual.body.product === 'revolv' && dual.body.engine === 'offermesh');
@@ -116,6 +117,36 @@ try {
   assert('validation rejects bad number', badNum.code === 422);
   const badStr = await post('/api/programs', { brandRef: 'brand:aurora-audio', name: 'x'.repeat(500), budgetEscrow: 10 }, CONSOLE);
   assert('validation rejects oversized string', badStr.code === 422);
+
+  // v0.6.0 product surfaces
+  const market = await get('/api/product/agent-marketplace');
+  assert('agent marketplace returns structured offers', market.code === 200 && market.body.status === 'agent_marketplace_ready' && market.body.offers.every((o) => o.sponsored === true));
+  const refAgent = await get('/api/product/reference-agent');
+  assert('reference agent guide returns loop', refAgent.body.status === 'reference_agent_ready' && refAgent.body.loop.includes('discover_offers'));
+  const dashboard = await get('/api/product/brand-dashboard');
+  assert('brand dashboard bills zero impressions', dashboard.body.status === 'brand_dashboard_ready' && dashboard.body.impressions_billed === 0);
+  const noGuidedTenant = await post('/api/product/create-offer-flow', { brandName: 'No Key Brand' });
+  assert('guided create offer without tenant key -> 401', noGuidedTenant.code === 401 && noGuidedTenant.body.status === 'tenant_auth_required');
+  const guided = await post('/api/product/create-offer-flow', {
+    brandName: 'Smoke Guided Brand',
+    offerTitle: 'Smoke guided offer',
+    category: 'smoke',
+    price: 90,
+    incentiveValue: 18,
+    budgetEscrow: 360,
+    terms: '18-unit credit after verified smoke receipt'
+  }, CONSOLE);
+  assert('guided create offer returns proof room', guided.code === 201 && guided.body.status === 'offer_ready_for_agent_discovery' && guided.body.proof_room.path === `/proof/${guided.body.offer.id}`);
+  const room = await get('/api/product/proof-room/' + guided.body.offer.id);
+  assert('proof room endpoint is ready', room.body.status === 'proof_room_ready' && room.body.verifier.status === 'no_receipt_yet');
+  const roomPage = await getText('/proof/' + guided.body.offer.id);
+  assert('public proof room renders html', roomPage.code === 200 && roomPage.body.includes('Revolv Proof Room'));
+  const demoNoGateway = await post('/api/product/partner-demo', { brandName: 'Smoke Demo No Gateway' }, CONSOLE);
+  assert('partner demo without gateway key -> 401', demoNoGateway.code === 401 && demoNoGateway.body.status === 'agent_auth_required');
+  const demo = await post('/api/product/partner-demo', { brandName: 'Smoke Demo Brand' }, { ...CONSOLE, ...KEY });
+  assert('partner demo completes', demo.code === 201 && demo.body.status === 'partner_demo_completed' && demo.body.steps.some((step) => step.status === 'tampered_receipt_flagged_for_review'));
+  const partnerHardening = await get('/api/ops/partner-hardening');
+  assert('partner hardening plan separates done from pending gates', partnerHardening.body.lanes.some((lane) => lane.id === 'guided_offer_creation' && lane.status === 'done') && partnerHardening.body.partner_ready_claim_allowed === false);
 
   // ---- admin plane ----
   const adminNo = await get('/api/admin/tenants');

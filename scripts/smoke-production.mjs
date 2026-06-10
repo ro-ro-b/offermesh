@@ -39,7 +39,7 @@ try {
   }
 
   const status = await get('/api/status');
-  assert('status is v0.5.3 Revolv', status.body.version === '0.5.3' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
+  assert('status is v0.6.0 Revolv', status.body.version === '0.6.0' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('DUAL remains read-only', status.body.dual?.writeMode === 'read_only' && status.body.dual?.liveDualWrites === false && status.body.dual?.publicWrites === false, status.body.dual);
 
   const monitor = await get('/api/ops/monitor');
@@ -58,11 +58,20 @@ try {
   const identity = await get('/api/product/public-identity');
   assert('canonical public URL is explicit', identity.body.canonical_public_url.endsWith('/revolv'), identity.body);
 
+  const market = await get('/api/product/agent-marketplace');
+  assert('agent marketplace endpoint ready', market.body.status === 'agent_marketplace_ready' && Array.isArray(market.body.offers), market.body);
+  const dashboard = await get('/api/product/brand-dashboard');
+  assert('brand dashboard endpoint ready', dashboard.body.status === 'brand_dashboard_ready' && dashboard.body.impressions_billed === 0, dashboard.body);
+  const refAgent = await get('/api/product/reference-agent');
+  assert('reference agent endpoint ready', refAgent.body.status === 'reference_agent_ready' && refAgent.body.loop?.includes('discover_offers'), refAgent.body);
+  const partnerHardening = await get('/api/ops/partner-hardening');
+  assert('partner hardening endpoint ready', partnerHardening.body.status === 'partner_hardening_plan_ready' && partnerHardening.body.partner_ready_claim_allowed === false, partnerHardening.body);
+
   const session = await get('/api/auth/session');
   assert('OIDC fails closed unless bound', [401, 403].includes(session.code), session.body);
 
   const bundle = await get('/api/source/review-bundle');
-  assert('source bundle versioned', bundle.body.service_version === '0.5.3' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
+  assert('source bundle versioned', bundle.body.service_version === '0.6.0' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
 } catch (err) {
   failures++;
   console.error('FAIL production smoke crashed:', err.message);
