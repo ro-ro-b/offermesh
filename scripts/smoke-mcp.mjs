@@ -32,7 +32,7 @@ try {
   if (!up) throw new Error('server did not start');
 
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
-  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.5.1');
+  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.5.2');
 
   const tools = await rpc('tools/list');
   assert('21 tools listed', tools.result.tools.length === 21, tools.result.tools.length);
@@ -115,6 +115,7 @@ try {
   assert('public identity tool returns canonical /revolv', identity.canonical_public_url.endsWith('/revolv'));
   const prod = toolText(await rpc('tools/call', { name: 'get_production_readiness', arguments: {} }));
   assert('production readiness tool blocks broad claim', prod.production_ready_claim_allowed === false && prod.blockers.includes('broad_production_cowork_review'));
+  assert('partner-ready tool claim blocked before broad review', prod.partner_ready_claim_allowed === false && prod.claim_profiles.partner_ready_pilot.blockers.includes('broad_partner_ready_cowork_review'));
   const drill = toolText(await rpc('tools/call', { name: 'get_customer_session_drill', arguments: {} }));
   assert('customer session drill tool returns evidence checklist', drill.required_evidence.length >= 4);
   const runbook = toolText(await rpc('tools/call', { name: 'get_incident_runbook', arguments: {} }));

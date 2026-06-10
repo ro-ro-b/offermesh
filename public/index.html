@@ -490,16 +490,16 @@
     <div class="hero-actions" aria-label="Current product boundaries">
       <span class="chip-meta"><span class="dot"></span><b>Read-only</b> DUAL posture</span>
       <span class="chip-meta"><b>Scoped</b> v0.4 Cowork pass</span>
-      <span class="chip-meta"><b>Broad gate</b> pending</span>
+      <span class="chip-meta" id="claimChip"><b>Partner gate</b> pending</span>
       <span class="chip-meta"><b>No</b> payment capture</span>
     </div>
   </div>
   <aside class="status-card" aria-label="Production readiness status">
     <span class="kicker">Production-readiness state</span>
-    <strong>Gated pilot</strong>
+    <strong id="claimState">Partner-ready gate pending</strong>
     <div class="kv" id="dualLine">DUAL status loading...</div>
     <div class="kv" id="engineLine">Product engine loading...</div>
-    <div class="kv"><b>Claim boundary:</b> production-ready and partner-ready language still require the fresh broad Cowork gate.</div>
+    <div class="kv" id="claimLine"><b>Claim boundary:</b> partner-ready pilot language still requires the fresh broad Cowork gate; full production-ready has separate live/provider blockers.</div>
   </aside>
 </section>
 
@@ -656,7 +656,7 @@
   <span>2026 © DUAL</span>
   <span>Revolv agent surface: MCP <code>POST /mcp</code></span>
   <span>OfferMesh engine: 21 tools including discovery, verification, DUAL plan, production-readiness, customer-session drill, and incident-runbook surfaces.</span>
-  <span>Reserve/redeem/simulate fail closed with <code>agent_auth_required</code>; DUAL execution requires operator token plus explicit flag and remains mapping-pending. Production-ready language still requires a fresh broad Cowork gate.</span>
+  <span>Reserve/redeem/simulate fail closed with <code>agent_auth_required</code>; DUAL execution requires operator token plus explicit flag and remains mapping-pending. Partner-ready pilot language requires the broad Cowork gate; production-ready remains a stricter gate.</span>
 </footer>
 
 <script>
@@ -684,14 +684,23 @@ function offerHtml(o) {
 }
 
 async function refreshAll() {
-  const [offers, programs, mandates, receipts, status] = await Promise.all([
-    get('/api/offers'), get('/api/programs'), get('/api/mandates'), get('/api/receipts'), get('/api/status')
+  const [offers, programs, mandates, receipts, status, prodReady] = await Promise.all([
+    get('/api/offers'), get('/api/programs'), get('/api/mandates'), get('/api/receipts'), get('/api/status'), get('/api/ops/production-readiness')
   ]);
   document.getElementById('verBadge').textContent = 'v' + status.version;
   document.getElementById('offersWalk').innerHTML = offers.offers.map(offerHtml).join('');
   const d = status.dual;
   document.getElementById('dualLine').innerHTML = `DUAL: <b>${d.targetNetwork}</b> · writeMode=<b>${d.writeMode}</b> · liveDualWrites=<b>${d.liveDualWrites}</b> · mappingPending=<b>${d.mainnetMappingPending}</b>`;
   document.getElementById('engineLine').innerHTML = `Product: <b>${status.product || d.product || 'revolv'}</b> · engine: <b>${status.engine || d.engine || 'offermesh'}</b>`;
+  const partnerReady = prodReady.partner_ready_claim_allowed === true;
+  const prodReadyAllowed = prodReady.production_ready_claim_allowed === true;
+  document.getElementById('claimState').textContent = prodReadyAllowed ? 'Production-ready claim allowed' : partnerReady ? 'Partner-ready pilot claim allowed' : 'Partner-ready gate pending';
+  document.getElementById('claimChip').innerHTML = partnerReady ? '<b>Partner-ready</b> pilot' : '<b>Partner gate</b> pending';
+  document.getElementById('claimLine').innerHTML = prodReadyAllowed
+    ? '<b>Claim boundary:</b> production-ready language is allowed by the current readiness profile.'
+    : partnerReady
+      ? '<b>Claim boundary:</b> partner-ready pilot language is allowed with explicit exclusions; full production-ready remains blocked.'
+      : '<b>Claim boundary:</b> partner-ready pilot language still requires the fresh broad Cowork gate; full production-ready has separate live/provider blockers.';
   out('dualStatus', d);
 
   document.getElementById('programs').innerHTML = programs.programs.map((p) =>

@@ -1,4 +1,4 @@
-// Full-loop REST smoke against a spawned server instance — v0.5.1 UI standard + production-readiness surface included.
+// Full-loop REST smoke against a spawned server instance — v0.5.2 partner-ready claim lane + production-readiness surface included.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -36,7 +36,7 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.5.1', status.body.version === '0.5.1', status.body.version);
+  assert('status v0.5.2', status.body.version === '0.5.2', status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const revolvPage = await getText('/revolv');
@@ -198,6 +198,7 @@ try {
   assert('public identity exposes canonical /revolv', ident.body.canonical_public_url.endsWith('/revolv') && ident.body.alias_public_state === 'protected_or_unverified');
   const prod = await get('/api/ops/production-readiness');
   assert('production readiness blocks broad claim', prod.body.production_ready_claim_allowed === false && prod.body.blockers.includes('broad_production_cowork_review'));
+  assert('partner-ready pilot claim blocked before broad review', prod.body.partner_ready_claim_allowed === false && prod.body.claim_profiles.partner_ready_pilot.blockers.includes('broad_partner_ready_cowork_review'));
   const drill = await get('/api/ops/customer-session-drill');
   assert('customer session drill is explicit', drill.body.required_evidence.length >= 4);
   const runbook = await get('/api/ops/incident-runbook');

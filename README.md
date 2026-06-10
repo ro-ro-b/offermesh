@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.5.1)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.5.2)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -13,7 +13,11 @@ OFFERMESH_GATEWAY_KEY=demo-gateway-key npm start   # http://127.0.0.1:4310/revol
 npm run test:all    # check + smoke + MCP smoke + persistence smoke
 ```
 
-Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE`, and `OFFERMESH_ALERT_*` for production-readiness posture.
+Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE`, `OFFERMESH_ALERT_*`, and non-secret `REVOLV_BROAD_COWORK_*` review-evidence env for production/partner claim posture.
+
+## v0.5.2 — partner-ready claim lane
+
+This pass separates full production readiness from partner-ready pilot readiness. Full production-ready remains blocked until every production item is done, including alias/domain, OIDC browser login, two-browser isolation, fine-grained concurrency, alerting, and DUAL readback mapping if that claim includes live DUAL. A narrower partner-ready pilot claim can become true only when the exact deployed v0.5.x build has a broad external Claude Cowork pass recorded in non-secret `REVOLV_BROAD_COWORK_*` evidence and the hosted monitor/durable tenant control plane are green. Even then, the allowed claim must keep live DUAL writes, payment capture, wallet movement, public writes, provider-created accounts, and real settlement explicitly excluded.
 
 ## v0.5.1 — DUAL UI/UX standard pass
 

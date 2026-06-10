@@ -104,7 +104,7 @@ const execAuthed = executeDualSync(store3, q.queue_id, { operatorTokenHeader: 'c
 assert('fully authorized execute is truthfully mapping-pending, no write', execAuthed.status === 'blocked_mapping_pending' && execAuthed.write_executed === false);
 delete process.env.OFFERMESH_OPERATOR_TOKEN;
 
-console.log('Tenancy + metering + rate limit + production readiness (v0.5.1):');
+console.log('Tenancy + metering + rate limit + production readiness (v0.5.2):');
 {
   const { createTenant, resolveTenantByApiKey, resolveTenantByGatewayKey, rotateTenantKeys, setTenantStatus } = await import('../lib/tenants.mjs');
   const { meter, tenantUsage, billingRecord } = await import('../lib/metering.mjs');
@@ -160,6 +160,28 @@ console.log('Tenancy + metering + rate limit + production readiness (v0.5.1):');
   assert('public identity canonical URL is /revolv', publicIdentity().canonical_public_url.endsWith('/revolv'));
   const prod = productionReadiness(s, mon);
   assert('production readiness blocks broad claim', prod.production_ready_claim_allowed === false && prod.blockers.includes('broad_production_cowork_review'));
+  assert('partner-ready pilot claim blocked before broad review', prod.partner_ready_claim_allowed === false && prod.claim_profiles.partner_ready_pilot.blockers.includes('broad_partner_ready_cowork_review'));
+  const prevReviewEnv = {
+    status: process.env.REVOLV_BROAD_COWORK_STATUS,
+    score: process.env.REVOLV_BROAD_COWORK_SCORE,
+    version: process.env.REVOLV_BROAD_COWORK_VERSION,
+    claim: process.env.REVOLV_BROAD_COWORK_CLAIM
+  };
+  process.env.REVOLV_BROAD_COWORK_STATUS = 'passed';
+  process.env.REVOLV_BROAD_COWORK_SCORE = '9.8';
+  process.env.REVOLV_BROAD_COWORK_VERSION = '0.5.2';
+  process.env.REVOLV_BROAD_COWORK_CLAIM = 'partner_ready_pilot';
+  s.remote = { kind: 'upstash_redis_rest' };
+  const partnerProd = productionReadiness(s, mon);
+  assert('broad review enables partner-ready pilot claim only', partnerProd.partner_ready_claim_allowed === true && partnerProd.production_ready_claim_allowed === false, partnerProd);
+  for (const [key, val] of Object.entries(prevReviewEnv)) {
+    const envKey = key === 'status' ? 'REVOLV_BROAD_COWORK_STATUS'
+      : key === 'score' ? 'REVOLV_BROAD_COWORK_SCORE'
+        : key === 'version' ? 'REVOLV_BROAD_COWORK_VERSION'
+          : 'REVOLV_BROAD_COWORK_CLAIM';
+    if (val === undefined) delete process.env[envKey];
+    else process.env[envKey] = val;
+  }
   assert('customer session drill requires isolation evidence', customerSessionDrill(s).required_evidence.length >= 4);
   assert('incident runbook lists fail-closed paths', incidentRunbook().fail_closed_paths.includes('OIDC when configured'));
 }

@@ -1,6 +1,7 @@
 // Read-only production-readiness smoke. Local by default; set REVOLV_SMOKE_BASE for hosted.
 const BASE = (process.env.REVOLV_SMOKE_BASE || 'http://127.0.0.1:4397').replace(/\/+$/, '');
 const shouldSpawn = !process.env.REVOLV_SMOKE_BASE;
+const expectPartnerReady = process.env.REVOLV_EXPECT_PARTNER_READY === '1';
 
 let child = null;
 if (shouldSpawn) {
@@ -38,7 +39,7 @@ try {
   }
 
   const status = await get('/api/status');
-  assert('status is v0.5.1 Revolv', status.body.version === '0.5.1' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
+  assert('status is v0.5.2 Revolv', status.body.version === '0.5.2' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('DUAL remains read-only', status.body.dual?.writeMode === 'read_only' && status.body.dual?.liveDualWrites === false && status.body.dual?.publicWrites === false, status.body.dual);
 
   const monitor = await get('/api/ops/monitor');
@@ -47,11 +48,12 @@ try {
   const readiness = await get('/api/ops/readiness');
   const readinessItems = Object.fromEntries((readiness.body.items || []).map((i) => [i.id, i.status]));
   assert('scoped Cowork pass recorded', readinessItems.external_review_gate === 'done', readinessItems);
-  assert('broad production gate pending', readinessItems.broad_production_review_gate === 'pending', readinessItems);
+  assert(expectPartnerReady ? 'broad production gate passed for partner-ready pilot' : 'broad production gate pending', expectPartnerReady ? readinessItems.broad_production_review_gate === 'done' : readinessItems.broad_production_review_gate === 'pending', readinessItems);
 
   const prod = await get('/api/ops/production-readiness');
-  assert('production readiness endpoint explicit', prod.body.state === 'production_pilot_incomplete' && prod.body.production_ready_claim_allowed === false, prod.body);
-  assert('production blockers include broad Cowork review', prod.body.blockers.includes('broad_production_cowork_review'), prod.body.blockers);
+  assert('production readiness endpoint explicit', ['production_pilot_incomplete', 'partner_ready_pilot'].includes(prod.body.state) && prod.body.production_ready_claim_allowed === false, prod.body);
+  assert(expectPartnerReady ? 'partner-ready pilot claim allowed' : 'partner-ready pilot claim blocked before broad review', expectPartnerReady ? prod.body.partner_ready_claim_allowed === true : prod.body.partner_ready_claim_allowed === false, prod.body);
+  assert(expectPartnerReady ? 'production blockers remain beyond partner claim' : 'production blockers include broad Cowork review', expectPartnerReady ? prod.body.blockers.length > 0 && !prod.body.blockers.includes('broad_production_cowork_review') : prod.body.blockers.includes('broad_production_cowork_review'), prod.body.blockers);
 
   const identity = await get('/api/product/public-identity');
   assert('canonical public URL is explicit', identity.body.canonical_public_url.endsWith('/revolv'), identity.body);
@@ -60,7 +62,7 @@ try {
   assert('OIDC fails closed unless bound', [401, 403].includes(session.code), session.body);
 
   const bundle = await get('/api/source/review-bundle');
-  assert('source bundle versioned', bundle.body.service_version === '0.5.1' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
+  assert('source bundle versioned', bundle.body.service_version === '0.5.2' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
 } catch (err) {
   failures++;
   console.error('FAIL production smoke crashed:', err.message);
