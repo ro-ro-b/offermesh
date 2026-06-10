@@ -1,4 +1,4 @@
-// Full-loop REST smoke against a spawned server instance — v0.7.0 command-centre UI included.
+// Full-loop REST smoke against a spawned server instance — v0.8.0 command-centre UI included.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -36,13 +36,19 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.7.0', status.body.version === '0.7.0', status.body.version);
+  assert('status v0.8.0', status.body.version === '0.8.0', status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const revolvPage = await getText('/revolv');
-  assert('/revolv public route serves command centre UI', revolvPage.code === 200 && revolvPage.body.includes('<h1>Revolv command centre</h1>') && revolvPage.body.includes('Partner command centre'));
-  assert('/revolv public route explains partner story', revolvPage.body.includes('Replace ad inventory with a proof-backed offer loop.') && revolvPage.body.includes('What a partner can test today'));
-  assert('/revolv public route exposes UI supercharge', ['Create Offer', 'Offer lifecycle', 'Role-based views', 'Partner readiness rail', 'Proof room hero', 'Agent marketplace view', 'MCP 26 tools'].every((text) => revolvPage.body.includes(text)));
+  const revolvMarketing = await getText('/components/RevolvMarketing.jsx');
+  const revolvConsole = await getText('/components/RevolvConsole.jsx');
+  assert('/revolv public route serves exact supplied UI shell', revolvPage.code === 200 && revolvPage.body.includes('Revolv — proof-backed offers for agent-mediated commerce') && revolvMarketing.body.includes('Offers that pay only for'));
+  assert('/revolv public route includes supplied marketing story', revolvMarketing.body.includes('From offer to verified outcome.') && revolvMarketing.body.includes('Replace ad inventory with a proof-backed offer loop.'));
+  assert('/revolv public route exposes supplied console tabs', ['Watch a run', 'What agents see', 'Create an offer', 'Buyer controls', 'Proof room', "What's ready"].every((text) => revolvConsole.body.includes(text)));
+  assert('/revolv public route self-hosts supplied assets and runtime',
+    ['colors_and_type.css', 'build/RevolvConsole.js', 'vendor/react.production.min.js', 'vendor/react-dom.production.min.js'].every((text) => revolvPage.body.includes(text))
+    && !revolvPage.body.includes('babel.min.js')
+    && revolvMarketing.body.includes('assets/illustrations/hero-orbit.png'));
   const dual = await get('/api/dual/status');
   assert('dual read_only, no live writes', dual.body.writeMode === 'read_only' && dual.body.liveDualWrites === false && dual.body.publicWrites === false);
   assert('dual status carries product/engine boundary', dual.body.product === 'revolv' && dual.body.engine === 'offermesh');
@@ -118,7 +124,7 @@ try {
   const badStr = await post('/api/programs', { brandRef: 'brand:aurora-audio', name: 'x'.repeat(500), budgetEscrow: 10 }, CONSOLE);
   assert('validation rejects oversized string', badStr.code === 422);
 
-  // v0.7.0 product surfaces
+  // v0.8.0 product surfaces
   const market = await get('/api/product/agent-marketplace');
   assert('agent marketplace returns structured offers', market.code === 200 && market.body.status === 'agent_marketplace_ready' && market.body.offers.every((o) => o.sponsored === true));
   const refAgent = await get('/api/product/reference-agent');

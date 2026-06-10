@@ -1,0 +1,284 @@
+/* =============================================================================
+   DUAL Design System — colors_and_type.css
+   ----------------------------------------------------------------------------
+   Single source of truth for color, type, spacing, radii, and shadow tokens.
+   Import this FIRST in any artifact.
+   ============================================================================= */
+
+/* ---------- Webfonts (substitutes — see README.md) ------------------------- */
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* =========================================================================
+     COLOR — primitives
+     =========================================================================
+     DUAL is a monochromatic teal/cyan brand. One hue, many values.
+     Reds and greens exist ONLY inside data viz, never in UI chrome.
+     ========================================================================= */
+
+  /* Teal — the brand */
+  --teal-50:  #EAF6F8;
+  --teal-100: #D7EEF1;
+  --teal-200: #B8DFE5;
+  --teal-300: #8FCDD6;
+  --teal-400: #6FBDC8;
+  --teal-500: #2094A2;   /* primary */
+  --teal-600: #1A7A86;   /* primary hover */
+  --teal-700: #155F69;
+  --teal-800: #0F454D;
+
+  /* Ink — text & near-black surfaces */
+  --ink-50:  #F4F7F8;
+  --ink-100: #E6ECEE;
+  --ink-200: #C9D6DA;
+  --ink-300: #9CB0B7;
+  --ink-400: #6B838C;
+  --ink-500: #3A5560;
+  --ink-700: #0E2A33;    /* heading ink */
+  --ink-900: #0E1A1F;    /* CTA-button near-black */
+
+  /* Surface */
+  --surface:        #FFFFFF;
+  --surface-tint:   #F6FBFC;
+  --surface-card:   #FFFFFF;
+  --page-tint:      #EAF6F8;
+
+  /* Data viz — restricted to charts & numeric deltas */
+  --viz-positive: #2BB673;
+  --viz-negative: #E5484D;
+  --viz-line:     #2094A2;
+  --viz-line-alt: #F58A8E;
+  --viz-grid:     #ECF3F4;
+
+  /* Backgrounds — gradient washes */
+  --bg-wash: linear-gradient(180deg, #F2F9FA 0%, #DCEFF2 50%, #F2F9FA 100%);
+  --bg-hero: radial-gradient(80% 60% at 50% 35%, #D7EEF1 0%, #EAF6F8 55%, #FFFFFF 100%);
+  --bg-dark: radial-gradient(80% 60% at 50% 50%, #0E3640 0%, #0A2026 100%);
+
+  /* =========================================================================
+     COLOR — semantic
+     ========================================================================= */
+
+  --color-fg-strong: var(--ink-700);
+  --color-fg:        var(--ink-500);
+  --color-fg-muted:  var(--ink-400);
+  --color-fg-faint:  var(--ink-300);
+  --color-fg-on-dark:#F2F9FA;
+
+  --color-bg:        var(--surface);
+  --color-bg-tint:   var(--surface-tint);
+  --color-bg-page:   var(--page-tint);
+  --color-bg-dark:   var(--ink-700);
+
+  --color-accent:        var(--teal-500);
+  --color-accent-hover:  var(--teal-600);
+  --color-accent-soft:   var(--teal-100);
+  --color-accent-fg:     #FFFFFF;
+
+  --color-border:        var(--ink-200);
+  --color-border-soft:   rgba(14, 42, 51, 0.08);
+  --color-border-strong: rgba(14, 42, 51, 0.16);
+
+  /* =========================================================================
+     TYPE — primitives
+     ========================================================================= */
+
+  --font-serif: "Source Serif 4", "Source Serif Pro", "Tiempos", Georgia, serif;
+  --font-sans:  "Inter", "Söhne", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:  "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  /* Scale (8pt base, generous) */
+  --fs-12: 0.75rem;     /* 12 — micro labels */
+  --fs-13: 0.8125rem;   /* 13 — uppercase eyebrows */
+  --fs-14: 0.875rem;    /* 14 — small body, dashboard tertiary */
+  --fs-16: 1rem;        /* 16 — body */
+  --fs-18: 1.125rem;    /* 18 — body lg, lead-ins */
+  --fs-20: 1.25rem;     /* 20 — card title */
+  --fs-24: 1.5rem;      /* 24 — section title sans */
+  --fs-28: 1.75rem;     /* 28 — dashboard KPI number */
+  --fs-32: 2rem;        /* 32 — display sm */
+  --fs-44: 2.75rem;     /* 44 — display md */
+  --fs-56: 3.5rem;      /* 56 — display lg (hero) */
+  --fs-72: 4.5rem;      /* 72 — display xl */
+
+  --lh-tight:    1.05;
+  --lh-snug:     1.15;
+  --lh-normal:   1.35;
+  --lh-relaxed:  1.55;
+  --lh-loose:    1.75;
+
+  --tracking-tight:  -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.08em;
+  --tracking-wider:  0.12em;
+
+  /* =========================================================================
+     SPACE — 8pt
+     ========================================================================= */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --space-40: 160px;
+
+  /* =========================================================================
+     RADIUS
+     ========================================================================= */
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   28px;
+  --radius-full: 999px;
+
+  /* =========================================================================
+     SHADOW
+     ========================================================================= */
+  --shadow-1: 0 1px 2px rgba(14, 42, 51, 0.04);
+  --shadow-card:
+    0 1px 2px rgba(14, 42, 51, 0.04),
+    0 8px 24px rgba(14, 42, 51, 0.05);
+  --shadow-card-hover:
+    0 2px 4px rgba(14, 42, 51, 0.06),
+    0 16px 32px rgba(14, 42, 51, 0.08);
+  --shadow-lift:
+    0 24px 56px rgba(14, 42, 51, 0.16);
+  --shadow-inset-kpi:
+    inset 0 0 0 1px #C7E4E9,
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  /* =========================================================================
+     MOTION
+     ========================================================================= */
+  --ease-out:        cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-quick:  140ms;
+  --duration-base:   220ms;
+  --duration-slow:   560ms;
+
+  /* =========================================================================
+     LAYOUT
+     ========================================================================= */
+  --max-content:   1200px;
+  --max-narrow:    760px;
+  --max-dashboard: 1280px;
+}
+
+/* =============================================================================
+   SEMANTIC TYPE CLASSES — apply directly with class="type-h1" etc.
+   ============================================================================= */
+
+.type-display {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--fs-72);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+}
+.type-h1 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--fs-56);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+}
+.type-h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--fs-44);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+}
+.type-h3 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--fs-32);
+  line-height: var(--lh-snug);
+  color: var(--color-fg-strong);
+}
+.type-h4 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-20);
+  line-height: var(--lh-normal);
+  color: var(--color-fg-strong);
+}
+.type-lead {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-18);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg);
+}
+.type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-16);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg);
+}
+.type-small {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-14);
+  line-height: var(--lh-normal);
+  color: var(--color-fg);
+}
+.type-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--fs-13);
+  line-height: 1;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-fg);
+}
+.type-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--fs-12);
+  line-height: 1;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+.type-kpi {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--fs-28);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-fg-strong);
+  font-variant-numeric: tabular-nums;
+}
+.type-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-14);
+  line-height: var(--lh-normal);
+}
+
+/* =============================================================================
+   BASELINE — drop into <body> as a sane default
+   ============================================================================= */
+
+.dual-baseline {
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  line-height: var(--lh-relaxed);
+  color: var(--color-fg);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
