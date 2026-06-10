@@ -104,7 +104,7 @@ const execAuthed = executeDualSync(store3, q.queue_id, { operatorTokenHeader: 'c
 assert('fully authorized execute is truthfully mapping-pending, no write', execAuthed.status === 'blocked_mapping_pending' && execAuthed.write_executed === false);
 delete process.env.OFFERMESH_OPERATOR_TOKEN;
 
-console.log('Tenancy + metering + rate limit + production readiness (v0.5.2):');
+console.log('Tenancy + metering + rate limit + production readiness (v0.5.3):');
 {
   const { createTenant, resolveTenantByApiKey, resolveTenantByGatewayKey, rotateTenantKeys, setTenantStatus } = await import('../lib/tenants.mjs');
   const { meter, tenantUsage, billingRecord } = await import('../lib/metering.mjs');
@@ -169,7 +169,7 @@ console.log('Tenancy + metering + rate limit + production readiness (v0.5.2):');
   };
   process.env.REVOLV_BROAD_COWORK_STATUS = 'passed';
   process.env.REVOLV_BROAD_COWORK_SCORE = '9.8';
-  process.env.REVOLV_BROAD_COWORK_VERSION = '0.5.2';
+  process.env.REVOLV_BROAD_COWORK_VERSION = '0.5.3';
   process.env.REVOLV_BROAD_COWORK_CLAIM = 'partner_ready_pilot';
   s.remote = { kind: 'upstash_redis_rest' };
   const partnerProd = productionReadiness(s, mon);

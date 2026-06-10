@@ -431,12 +431,152 @@
     color:var(--teal-600);
     font-weight:800;
   }
+  .story-band {
+    display:grid;
+    gap:18px;
+    margin:0 0 24px;
+  }
+  .story-header {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(260px,420px);
+    gap:18px;
+    align-items:end;
+    padding:20px 0 2px;
+  }
+  .story-title {
+    margin:0;
+    color:var(--ink-700);
+    font-family:var(--font-serif);
+    font-size:30px;
+    font-weight:400;
+    line-height:1.15;
+  }
+  .story-copy {
+    margin:8px 0 0;
+    max-width:760px;
+    color:var(--ink-500);
+    font-size:15px;
+  }
+  .story-claim {
+    padding:14px;
+    border:1px solid rgba(232,169,59,0.28);
+    border-radius:var(--radius-md);
+    background:#FFF8EA;
+    color:#5E4615;
+    font-size:13px;
+    line-height:1.45;
+  }
+  .story-claim b { color:#4A350E; }
+  .persona-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+  }
+  .persona-card,
+  .proof-card,
+  .journey-step {
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    background:#fff;
+    box-shadow:var(--shadow-card);
+  }
+  .persona-card {
+    display:grid;
+    gap:8px;
+    min-height:150px;
+    padding:16px;
+  }
+  .persona-card .role,
+  .journey-step .num,
+  .proof-card .role {
+    color:var(--teal-600);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+  }
+  .persona-card strong {
+    color:var(--ink-700);
+    font-size:18px;
+    line-height:1.25;
+  }
+  .persona-card p,
+  .proof-card p,
+  .journey-step p {
+    margin:0;
+    color:var(--ink-500);
+    font-size:13.5px;
+    line-height:1.48;
+  }
+  .journey-rail {
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:10px;
+  }
+  .journey-step {
+    position:relative;
+    min-height:156px;
+    padding:16px;
+    overflow:hidden;
+  }
+  .journey-step::after {
+    content:"";
+    position:absolute;
+    right:16px;
+    bottom:14px;
+    width:36px;
+    height:2px;
+    background:var(--teal-200);
+  }
+  .journey-step:last-child::after { display:none; }
+  .journey-step b {
+    display:block;
+    margin:9px 0 6px;
+    color:var(--ink-700);
+    font-size:15px;
+    line-height:1.25;
+  }
+  .proof-grid {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:12px;
+  }
+  .proof-card {
+    padding:16px;
+  }
+  .proof-card ul {
+    display:grid;
+    gap:8px;
+    margin:10px 0 0;
+    padding:0;
+  }
+  .proof-card li {
+    list-style:none;
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    color:var(--ink-500);
+    font-size:13px;
+  }
+  .proof-card li::before {
+    content:"";
+    width:7px;
+    height:7px;
+    margin-top:7px;
+    flex:0 0 7px;
+    border-radius:999px;
+    background:var(--teal-500);
+  }
+  .proof-card.warn li::before { background:var(--warn); }
   @media (max-width:1080px) {
     .hero { grid-template-columns:1fr; }
     .status-card { max-width:680px; }
+    .story-header { grid-template-columns:1fr; }
+    .journey-rail { grid-template-columns:repeat(2,minmax(0,1fr)); }
   }
   @media (max-width:900px) {
     .grid { grid-template-columns:1fr; }
+    .persona-grid, .proof-grid { grid-template-columns:1fr; }
   }
   @media (max-width:720px) {
     .shell { --shell-gutter:16px; padding-bottom:64px; }
@@ -458,6 +598,10 @@
     }
     nav button { width:100%; min-width:0; padding:8px 10px; font-size:10px; }
     .card { padding:16px; }
+    .story-title { font-size:25px; }
+    .journey-rail { grid-template-columns:1fr; }
+    .journey-step { min-height:auto; }
+    .journey-step::after { display:none; }
     .row { display:grid; grid-template-columns:1fr; gap:0; }
     button.act, button.ghost { width:100%; margin-right:0; }
   }
@@ -486,7 +630,7 @@
   <div class="hero-copy">
     <span class="eyebrow">DUAL UI standard</span>
     <h1>Revolv</h1>
-    <p class="sub">SmartNFT brand offers for agent-mediated commerce. Agents discover, evaluate, reserve, and redeem verifiable offers under scoped mandates; brands pay per <b>verified outcome</b>, not per impression. OfferMesh remains the SaaS/protocol engine underneath Revolv.</p>
+    <p class="sub">Revolv turns brand offers into verifiable options that AI agents can evaluate without covert steering. Brands fund outcome-backed offers, buyers keep control through mandates, and verifiers decide which redemptions count.</p>
     <div class="hero-actions" aria-label="Current product boundaries">
       <span class="chip-meta"><span class="dot"></span><b>Read-only</b> DUAL posture</span>
       <span class="chip-meta"><b>Scoped</b> v0.4 Cowork pass</span>
@@ -503,13 +647,93 @@
   </aside>
 </section>
 
+<section class="story-band" aria-label="Revolv user story">
+  <div class="story-header">
+    <div>
+      <span class="eyebrow">Partner story</span>
+      <h2 class="story-title">Replace ad inventory with a proof-backed offer loop.</h2>
+      <p class="story-copy">A partner does not need to believe in a new ad format. They need to see a safe loop: a brand publishes an offer, a buyer mandate limits the agent, the agent redeems only when eligible, and a verifier decides whether the brand pays.</p>
+    </div>
+    <div class="story-claim">
+      <b>Current claim:</b> production-pilot surface. Partner-ready pilot language remains gated by broad Cowork review; full production-ready still has live/provider blockers.
+    </div>
+  </div>
+
+  <div class="persona-grid" aria-label="Who uses Revolv">
+    <article class="persona-card">
+      <span class="role">Brand</span>
+      <strong>Publish a budget-capped offer.</strong>
+      <p>Brand teams define sponsored terms, caps, and incentive value. Spend is counted only after a verifier accepts a receipt.</p>
+    </article>
+    <article class="persona-card">
+      <span class="role">Agent platform</span>
+      <strong>Monetise intent without hidden ads.</strong>
+      <p>Agents discover structured offers over MCP, but buyer mandates decide what can be considered, reserved, or redeemed.</p>
+    </article>
+    <article class="persona-card">
+      <span class="role">Buyer and verifier</span>
+      <strong>Keep control and proof separate.</strong>
+      <p>The buyer can opt out of sponsored influence. The verifier rejects tampered receipts before value is released.</p>
+    </article>
+  </div>
+
+  <div class="journey-rail" aria-label="Five-step offer loop">
+    <article class="journey-step">
+      <span class="num">01</span>
+      <b>Brand publishes</b>
+      <p>Offer terms, budget, sponsorship, and incentive value become machine-readable.</p>
+    </article>
+    <article class="journey-step">
+      <span class="num">02</span>
+      <b>Mandate gates</b>
+      <p>The buyer's scope, spend ceiling, merchant policy, and sponsorship preference are checked first.</p>
+    </article>
+    <article class="journey-step">
+      <span class="num">03</span>
+      <b>Agent redeems</b>
+      <p>The agent reserves and redeems only when the offer fits the mandate and proof path.</p>
+    </article>
+    <article class="journey-step">
+      <span class="num">04</span>
+      <b>Verifier decides</b>
+      <p>Receipts settle only when integrity checks pass; tampered receipts are flagged.</p>
+    </article>
+    <article class="journey-step">
+      <span class="num">05</span>
+      <b>Partner reviews</b>
+      <p>Reports show verified outcomes, zero impressions billed, and the exact DUAL/payment boundary.</p>
+    </article>
+  </div>
+
+  <div class="proof-grid" aria-label="Partner proof boundaries">
+    <article class="proof-card">
+      <span class="role">What a partner can test today</span>
+      <ul>
+        <li>Run the autonomous agent and inspect the decision trace.</li>
+        <li>Prove sponsored opt-out blocks paid influence.</li>
+        <li>Verify, dispute, and inspect source-review evidence.</li>
+        <li>Use tenant API and gateway keys without raw secrets at rest.</li>
+      </ul>
+    </article>
+    <article class="proof-card warn">
+      <span class="role">What is deliberately excluded</span>
+      <ul>
+        <li>No live DUAL write or public write path is enabled.</li>
+        <li>No payment capture, wallet movement, payout, or settlement occurs.</li>
+        <li>OIDC, custom domain, and full production-ready evidence remain separate gates.</li>
+        <li>Partner-ready pilot language needs the fresh broad Cowork pass.</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
 <nav id="tabs" aria-label="Revolv workflow tabs">
-  <button data-tab="walkthrough" class="active">Walkthrough</button>
-  <button data-tab="agent">Agent</button>
-  <button data-tab="brand">Brand console</button>
-  <button data-tab="principal">Principal</button>
+  <button data-tab="walkthrough" class="active">Proof run</button>
+  <button data-tab="agent">Agent view</button>
+  <button data-tab="brand">Brand view</button>
+  <button data-tab="principal">Buyer mandate</button>
   <button data-tab="verifier">Verifier</button>
-  <button data-tab="proof">Proof &amp; DUAL</button>
+  <button data-tab="proof">Readiness</button>
 </nav>
 
 <!-- WALKTHROUGH -->
