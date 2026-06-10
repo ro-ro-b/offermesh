@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OfferMesh — SmartNFT offers for agent-mediated commerce</title>
+<style>
+  :root { --bg:#0b1020; --card:#141b33; --line:#26304f; --text:#e8ecf8; --dim:#9aa6c6; --accent:#5b8cff; --good:#3ecf8e; --warn:#ffb454; --bad:#ff6b81; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); font:15px/1.55 -apple-system,Segoe UI,Roboto,sans-serif; padding:20px; max-width:1240px; margin:0 auto; }
+  header { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; }
+  h1 { font-size:22px; } h2 { font-size:14px; margin-bottom:10px; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; }
+  .sub { color:var(--dim); margin:6px 0 14px; max-width:880px; }
+  .badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; border:1px solid var(--line); color:var(--dim); margin:0 6px 6px 0; }
+  .badge.good { color:var(--good); border-color:var(--good); }
+  nav { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  nav button { background:transparent; border:1px solid var(--line); color:var(--dim); padding:7px 14px; border-radius:8px; cursor:pointer; font-size:14px; }
+  nav button.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .tab { display:none; } .tab.active { display:block; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:900px){ .grid { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:15px; margin-bottom:14px; }
+  .offer, .item { border:1px solid var(--line); border-radius:9px; padding:9px 12px; margin-bottom:7px; }
+  .offer .t, .item .t { font-weight:600; } .m { color:var(--dim); font-size:12.5px; word-break:break-all; }
+  .state { font-size:11.5px; padding:1px 8px; border-radius:999px; border:1px solid var(--line); margin-left:6px; white-space:nowrap; }
+  .state.published{color:var(--accent)} .state.discovered,.state.reserved,.state.paused,.state.pending_verification{color:var(--warn)}
+  .state.redeemed,.state.settled,.state.active,.state.verified{color:var(--good)}
+  .state.expired,.state.clawed_back,.state.flagged_review,.state.revoked,.state.disputed_clawed_back{color:var(--bad)}
+  button.act { background:var(--accent); border:0; color:#fff; padding:8px 13px; border-radius:8px; cursor:pointer; font-size:13.5px; margin:3px 5px 3px 0; }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); padding:7px 12px; border-radius:8px; cursor:pointer; font-size:13px; margin:3px 5px 3px 0; }
+  pre { background:#0a0f1e; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:11.5px; overflow:auto; max-height:300px; white-space:pre-wrap; margin-top:8px; }
+  input, select { background:#0a0f1e; border:1px solid var(--line); color:var(--text); border-radius:7px; padding:7px 9px; font-size:13.5px; width:100%; margin-bottom:7px; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  .steps li { list-style:none; margin-bottom:5px; color:var(--dim); counter-increment:s; }
+  .steps li::before { content:counter(s) ". "; color:var(--accent); font-weight:700; }
+  .steps { counter-reset:s; padding-left:2px; }
+  .kv { color:var(--dim); font-size:13px; margin:4px 0; } .kv b { color:var(--text); }
+  footer { margin-top:18px; color:var(--dim); font-size:12.5px; border-top:1px solid var(--line); padding-top:11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>OfferMesh</h1>
+  <div>
+    <span class="badge good">sponsored = machine-readable</span>
+    <span class="badge">read_only DUAL posture</span>
+    <span class="badge">rewards simulated</span>
+    <span class="badge">no PII in public state</span>
+    <span class="badge" id="verBadge">v—</span>
+  </div>
+</header>
+<p class="sub">SmartNFT brand offers replacing adverts in agent-mediated commerce — agents discover, evaluate, reserve, and redeem verifiable offers under scoped mandates; brands pay per <b>verified outcome</b>, not per impression.</p>
+
+<nav id="tabs">
+  <button data-tab="walkthrough" class="active">Walkthrough</button>
+  <button data-tab="agent">Agent</button>
+  <button data-tab="brand">Brand console</button>
+  <button data-tab="principal">Principal</button>
+  <button data-tab="verifier">Verifier</button>
+  <button data-tab="proof">Proof &amp; DUAL</button>
+</nav>
+
+<!-- WALKTHROUGH -->
+<div class="tab active" id="tab-walkthrough">
+  <div class="grid">
+    <div class="card">
+      <h2>Reviewer walkthrough (≈90s)</h2>
+      <ol class="steps">
+        <li><b>Run the autonomous agent</b> — it scores disclosed offers, picks the best within its mandate, redeems, gets verified. Full decision trace.</li>
+        <li><b>Run the unsponsored principal</b> — that principal opted out of paid influence; the agent takes no sponsored action. Disclosure made this enforceable.</li>
+        <li><b>Narrow mandate</b> — gate blocks on scope/merchant/spend; nothing moves.</li>
+        <li><b>Red-team</b> — tampered receipt flags for review; no value released.</li>
+        <li><b>Brand report</b> — spend equals verified outcomes; impressions billed = 0.</li>
+      </ol>
+      <button class="act" onclick="simRun('good')">▶ 1. Autonomous agent run</button>
+      <button class="ghost" onclick="simRun('nosponsor')">2. Unsponsored principal</button>
+      <button class="ghost" onclick="runNarrow()">3. Narrow mandate</button>
+      <button class="ghost" onclick="runTamper()">4. Red-team tamper</button>
+      <button class="ghost" onclick="showReport()">5. Brand report</button>
+      <pre id="walkOut">Output appears here.</pre>
+    </div>
+    <div class="card">
+      <h2>Live offers</h2>
+      <div id="offersWalk"></div>
+      <div class="kv" id="dualLine"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AGENT -->
+<div class="tab" id="tab-agent">
+  <div class="grid">
+    <div class="card">
+      <h2>Run agent under a mandate</h2>
+      <select id="agentMandate"></select>
+      <button class="act" onclick="agentRun()">Run autonomous agent</button>
+      <div class="kv">The agent: loads mandate policy → discovers structured offers → applies principal sponsored-filter → scores incentive density → eligibility gate → reserve → redeem → independent verification.</div>
+      <pre id="agentOut">Decision trace appears here.</pre>
+    </div>
+    <div class="card">
+      <h2>Manual loop (step by step)</h2>
+      <select id="manOffer"></select>
+      <select id="manMandate"></select>
+      <button class="ghost" onclick="man('discover')">Discover</button>
+      <button class="ghost" onclick="man('eligibility')">Eligibility</button>
+      <button class="ghost" onclick="man('reserve')">Reserve</button>
+      <button class="ghost" onclick="man('redeem')">Redeem</button>
+      <button class="ghost" onclick="man('reserve_noauth')">Reserve w/o key (fails closed)</button>
+      <pre id="manOut">—</pre>
+    </div>
+  </div>
+</div>
+
+<!-- BRAND -->
+<div class="tab" id="tab-brand">
+  <div class="grid">
+    <div class="card">
+      <h2>Programs</h2>
+      <div id="programs"></div>
+      <h2 style="margin-top:12px">Create program</h2>
+      <select id="pBrand"></select>
+      <input id="pName" placeholder="Program name" value="New verified-outcome program">
+      <input id="pBudget" placeholder="Escrowed budget" type="number" value="250">
+      <button class="act" onclick="createProgram()">Create program (escrow budget)</button>
+    </div>
+    <div class="card">
+      <h2>Mint offer token</h2>
+      <select id="oProgram"></select>
+      <input id="oTitle" placeholder="Offer title" value="10% off for mandated agents">
+      <div class="row">
+        <input id="oPrice" placeholder="Price" value="100" type="number">
+        <input id="oVal" placeholder="Incentive value" value="10" type="number">
+      </div>
+      <button class="act" onclick="mintOffer()">Mint offer token</button>
+      <h2 style="margin-top:12px">Report — per verified outcome</h2>
+      <select id="rProgram"></select>
+      <button class="ghost" onclick="showReport()">Report</button>
+      <button class="ghost" onclick="showEpoch()">Simulated reward epoch</button>
+      <pre id="brandOut">—</pre>
+    </div>
+  </div>
+</div>
+
+<!-- PRINCIPAL -->
+<div class="tab" id="tab-principal">
+  <div class="grid">
+    <div class="card">
+      <h2>Mandates (buyer authority)</h2>
+      <div id="mandates"></div>
+    </div>
+    <div class="card">
+      <h2>Sign new mandate</h2>
+      <input id="mPrincipal" placeholder="Principal ref" value="principal:ian-demo">
+      <input id="mAgent" placeholder="Agent id" value="agent:new">
+      <input id="mCeiling" placeholder="Spend ceiling" type="number" value="500">
+      <label class="kv"><input type="checkbox" id="mSponsored" checked style="width:auto;margin-right:6px"> Allow sponsored offers (uncheck = opt out of paid influence)</label>
+      <button class="act" onclick="signMandate()">Sign mandate</button>
+      <pre id="prinOut">—</pre>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFIER -->
+<div class="tab" id="tab-verifier">
+  <div class="card">
+    <h2>Redemption receipts</h2>
+    <div id="receipts"></div>
+    <pre id="verOut">Select a receipt action.</pre>
+  </div>
+</div>
+
+<!-- PROOF -->
+<div class="tab" id="tab-proof">
+  <div class="grid">
+    <div class="card">
+      <h2>DUAL posture &amp; sync lane</h2>
+      <pre id="dualStatus">—</pre>
+      <button class="ghost" onclick="loadDualQueue()">View sync queue</button>
+      <button class="ghost" onclick="tryExecuteNoToken()">Try execute w/o operator token (fails closed)</button>
+      <pre id="dualOut">—</pre>
+    </div>
+    <div class="card">
+      <h2>Proof event log (hashed, append-only)</h2>
+      <button class="ghost" onclick="loadEvents()">Refresh events</button>
+      <button class="ghost" onclick="loadBundle()">Source review bundle</button>
+      <pre id="eventsOut">—</pre>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Agent surface is MCP (POST /mcp): 14 tools incl. discover_offers · check_eligibility · reserve_offer · redeem_offer · simulate_agent_run · verify_receipt · prepare_dual_sync · queue_dual_sync. Reserve/redeem/simulate fail closed (<code>agent_auth_required</code>) without a verified gateway key; DUAL execution additionally requires an operator token + explicit flag and is mapping-pending in this build. Local demo only — no live DUAL writes.
+</footer>
+
+<script>
+const j = (r) => r.json();
+const post = (u, b, h={}) => fetch(u, { method:'POST', headers:{'content-type':'application/json', ...h}, body:JSON.stringify(b) }).then(j);
+const get = (u) => fetch(u).then(j);
+const out = (el, v) => document.getElementById(el).textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2);
+// Demo gateway key (local reviewer demo only — a hosted build would never ship a key to the browser).
+const KEY = { 'x-offermesh-gateway-key': 'demo-gateway-key' };
+let SI = null;
+
+// tabs
+document.getElementById('tabs').addEventListener('click', (e) => {
+  if (e.target.tagName !== 'BUTTON') return;
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b === e.target));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-' + e.target.dataset.tab));
+  refreshAll();
+});
+
+function offerHtml(o) {
+  return `<div class="offer"><span class="t">${o.title}</span><span class="state ${o.state}">${o.state}</span>
+    <div class="m">price ${o.price} · incentive ${o.incentive_value} (${o.incentive_type}) · sponsored=${o.sponsored} · ${o.id}</div></div>`;
+}
+
+async function refreshAll() {
+  const [offers, programs, mandates, receipts, status] = await Promise.all([
+    get('/api/offers'), get('/api/programs'), get('/api/mandates'), get('/api/receipts'), get('/api/status')
+  ]);
+  document.getElementById('verBadge').textContent = 'v' + status.version;
+  document.getElementById('offersWalk').innerHTML = offers.offers.map(offerHtml).join('');
+  const d = status.dual;
+  document.getElementById('dualLine').innerHTML = `DUAL: <b>${d.targetNetwork}</b> · writeMode=<b>${d.writeMode}</b> · liveDualWrites=<b>${d.liveDualWrites}</b> · mappingPending=<b>${d.mainnetMappingPending}</b>`;
+  out('dualStatus', d);
+
+  document.getElementById('programs').innerHTML = programs.programs.map((p) =>
+    `<div class="item"><span class="t">${p.name}</span><span class="state ${p.state}">${p.state}</span>
+     <div class="m">budget ${p.budget_escrow} · available ${p.escrow_available} · held ${p.escrow_held} · spent ${p.escrow_spent}</div>
+     <button class="ghost" onclick="progAct('${p.id}','${p.state === 'active' ? 'pause' : 'resume'}')">${p.state === 'active' ? 'Pause' : 'Resume'}</button>
+     <button class="ghost" onclick="topUp('${p.id}')">Top up +100</button></div>`).join('');
+
+  document.getElementById('mandates').innerHTML = mandates.mandates.map((m) =>
+    `<div class="item"><span class="t">${m.agent_id}</span><span class="state ${m.state}">${m.state}</span>
+     <div class="m">principal ${m.principal_ref} · scope [${m.scope.join(', ')}] · ceiling ${m.spend_ceiling} (used ${m.spend_used}) · sponsored ${m.allow_sponsored ? 'allowed' : 'EXCLUDED'}</div>
+     ${m.state === 'active' ? `<button class="ghost" onclick="revoke('${m.id}')">Revoke</button>` : ''}</div>`).join('');
+
+  document.getElementById('receipts').innerHTML = receipts.receipts.map((r) =>
+    `<div class="item"><span class="t">${r.id}</span><span class="state ${r.status}">${r.status}</span>
+     <div class="m">offer ${r.offer_id} · hash ${r.receipt_hash.slice(0, 26)}… · verified=${r.verified}</div>
+     <button class="ghost" onclick="verifyR('${r.id}')">Verify</button>
+     <button class="ghost" onclick="disputeR('${r.id}')">Dispute</button>
+     <button class="ghost" onclick="prepDual('${r.id}')">DUAL payload</button>
+     <button class="ghost" onclick="queueDual('${r.id}')">Queue DUAL sync</button></div>`).join('') || 'No receipts yet — run the agent.';
+
+  // selects
+  fillSelect('agentMandate', mandates.mandates.filter((m) => m.state === 'active').map((m) => [m.id, `${m.agent_id} (${m.allow_sponsored ? 'sponsored ok' : 'no sponsored'})`]));
+  fillSelect('manOffer', offers.offers.filter((o) => ['published','discovered'].includes(o.state)).map((o) => [o.id, o.title]));
+  fillSelect('manMandate', mandates.mandates.map((m) => [m.id, m.agent_id]));
+  fillSelect('pBrand', (await get('/api/brands')).brands.map((b) => [b.id, b.name]));
+  fillSelect('oProgram', programs.programs.map((p) => [p.id, p.name]));
+  fillSelect('rProgram', programs.programs.map((p) => [p.id, p.name]));
+}
+function fillSelect(id, pairs) {
+  const el = document.getElementById(id);
+  const cur = el.value;
+  el.innerHTML = pairs.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+  if (pairs.some(([v]) => v === cur)) el.value = cur;
+}
+
+async function freshOfferId() {
+  const m = await post('/api/offers', { programId: SI.program_id, title: 'Loop demo offer', category: 'audio',
+    merchant: 'brand:aurora-audio', price: 150, incentiveValue: 15, incentiveType: 'discount' });
+  return m.id;
+}
+
+// walkthrough actions
+async function simRun(kind) {
+  if (kind === 'good') await freshOfferId();
+  const mandateId = kind === 'good' ? SI.good_mandate_id : SI.no_sponsored_mandate_id;
+  const agentId = kind === 'good' ? 'agent:claude-reference' : 'agent:unsponsored';
+  out('walkOut', await post('/api/agent/simulate', { mandateId, agentId }, KEY));
+  refreshAll();
+}
+async function runNarrow() {
+  const offerId = await freshOfferId();
+  const r = await post('/api/agent/eligibility', { offerId, mandateId: SI.narrow_mandate_id, agentId: 'agent:narrow-scope' });
+  out('walkOut', { narrow_mandate_eligibility: r, note: 'Gate blocks; no state changed.' });
+  refreshAll();
+}
+async function runTamper() {
+  const offerId = await freshOfferId();
+  const m = SI.good_mandate_id, a = 'agent:claude-reference';
+  await post('/api/agent/reserve', { offerId, mandateId: m, agentId: a }, KEY);
+  const red = await post('/api/agent/redeem', { offerId, mandateId: m, agentId: a, idempotencyKey: 'tamper-' + offerId }, KEY);
+  if (!red.receipt) return out('walkOut', red);
+  const v = await post('/api/verify', { receiptId: red.receipt.id, submittedReceipt: { ...red.receipt, incentive_value: 99999 } });
+  out('walkOut', { tampered_receipt_verification: v, note: 'Flagged for review; no value released.' });
+  refreshAll();
+}
+async function showReport() {
+  const pid = document.getElementById('rProgram')?.value || SI.program_id;
+  const r = await get('/api/report/' + pid);
+  out('walkOut', r); out('brandOut', r);
+}
+async function showEpoch() {
+  out('brandOut', await get('/api/reward-epoch/' + (document.getElementById('rProgram').value || SI.program_id)));
+}
+
+// agent tab
+async function agentRun() {
+  out('agentOut', await post('/api/agent/simulate', { mandateId: document.getElementById('agentMandate').value, agentId: 'agent:ui-run' }, KEY));
+  refreshAll();
+}
+let manKey = null;
+async function man(step) {
+  const offerId = document.getElementById('manOffer').value;
+  const mandateId = document.getElementById('manMandate').value;
+  const a = 'agent:manual';
+  let r;
+  if (step === 'discover') r = await post('/api/agent/discover', { offerId, agentId: a });
+  if (step === 'eligibility') r = await post('/api/agent/eligibility', { offerId, mandateId, agentId: a });
+  if (step === 'reserve') r = await post('/api/agent/reserve', { offerId, mandateId, agentId: a }, KEY);
+  if (step === 'reserve_noauth') r = await post('/api/agent/reserve', { offerId, mandateId, agentId: a });
+  if (step === 'redeem') { manKey = manKey || ('man-' + offerId); r = await post('/api/agent/redeem', { offerId, mandateId, agentId: a, idempotencyKey: manKey }, KEY); }
+  out('manOut', r); refreshAll();
+}
+
+// brand tab
+async function createProgram() {
+  out('brandOut', await post('/api/programs', { brandRef: document.getElementById('pBrand').value, name: document.getElementById('pName').value, budgetEscrow: Number(document.getElementById('pBudget').value) }));
+  refreshAll();
+}
+async function mintOffer() {
+  out('brandOut', await post('/api/offers', { programId: document.getElementById('oProgram').value, title: document.getElementById('oTitle').value, category: 'general', price: Number(document.getElementById('oPrice').value), incentiveValue: Number(document.getElementById('oVal').value) }));
+  refreshAll();
+}
+async function progAct(id, act) { out('brandOut', await post(`/api/programs/${id}/${act}`, {})); refreshAll(); }
+async function topUp(id) { out('brandOut', await post(`/api/programs/${id}/topup`, { amount: 100 })); refreshAll(); }
+
+// principal tab
+async function signMandate() {
+  out('prinOut', await post('/api/mandates', {
+    principalRef: document.getElementById('mPrincipal').value,
+    agentId: document.getElementById('mAgent').value,
+    scope: ['quote', 'redeem_offer', 'purchase'],
+    spendCeiling: Number(document.getElementById('mCeiling').value),
+    merchantAllowlist: [],
+    allowSponsored: document.getElementById('mSponsored').checked,
+    expiresAt: '2027-01-01T00:00:00.000Z'
+  }));
+  refreshAll();
+}
+async function revoke(id) { out('prinOut', await post(`/api/mandates/${id}/revoke`, {})); refreshAll(); }
+
+// verifier tab
+async function verifyR(id) { out('verOut', await post('/api/verify', { receiptId: id })); refreshAll(); }
+async function disputeR(id) { out('verOut', await post('/api/dispute', { receiptId: id })); refreshAll(); }
+
+// proof tab
+async function prepDual(id) { out('verOut', await get('/api/dual/prepare/' + id)); }
+async function queueDual(id) { out('verOut', await post('/api/dual/queue', { receiptId: id }, KEY)); refreshAll(); }
+async function loadDualQueue() { out('dualOut', await get('/api/dual-queue')); }
+async function tryExecuteNoToken() {
+  const q = await get('/api/dual-queue');
+  const first = q.queue[0];
+  if (!first) return out('dualOut', 'Queue empty — verify a receipt and queue it first (Verifier tab).');
+  out('dualOut', await post('/api/dual/execute/' + first.id, { execute_live_dual_write: true }));
+}
+async function loadEvents() { out('eventsOut', await get('/api/events?limit=40')); }
+async function loadBundle() {
+  const b = await get('/api/source/review-bundle');
+  out('eventsOut', { file_count: b.file_count, bundle_hash: b.bundle_hash, files: b.files.map((f) => `${f.path} ${f.sha256.slice(0, 18)}…`) });
+}
+
+(async () => { SI = await get('/api/seed-info'); refreshAll(); })();
+</script>
+</body>
+</html>
