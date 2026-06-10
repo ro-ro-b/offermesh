@@ -1,4 +1,4 @@
-# OfferMesh — SmartNFT Agentic Offer Exchange (v0.2.0)
+# OfferMesh — SmartNFT Agentic Offer Exchange (v0.3.0)
 
 SmartNFT brand offers replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -8,10 +8,18 @@ Built per `plans/sad-2026-06-10-smartnft-agentic-offer-exchange.md` (all 4 sprin
 
 ```bash
 OFFERMESH_GATEWAY_KEY=demo-gateway-key npm start   # http://127.0.0.1:4310 — UI + REST + MCP at /mcp
-npm run test:all    # check (30) + smoke (38) + MCP smoke (23) + persistence smoke (6)
+npm run test:all    # check (42) + smoke (50) + MCP smoke (25) + persistence smoke (7)
 ```
 
-Optional env: `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence).
+Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence).
+
+## v0.3.0 — SaaS layer
+
+Multi-tenant brand workspaces with admin-issued API + gateway keys (random, shown once, stored only as sha256 hashes, constant-time compare), tenant-scoped console writes and cross-tenant isolation, suspend/resume/rotate lifecycle, per-tenant monthly usage metering with hashed billing records (per-verified-outcome model; payment processor excluded this phase), durable storage via Upstash Redis REST (whole-snapshot, last-writer-wins — disclosed), token-bucket rate limiting (per instance — disclosed), security headers (CSP/nosniff/frame-deny/HSTS), input validation, request IDs, `/api/ops/monitor` health checks, and a truthful `/api/ops/readiness` scorecard that is the ONLY readiness claim this service makes. CI runs the full suite on every push. IdP user login is phase 2; the demo workspace uses public demo keys by design.
+
+### SaaS surface
+
+Admin (x-offermesh-admin-token): `POST/GET /api/admin/tenants`, `POST .../rotate|suspend|resume`, `GET /api/admin/usage`, `GET /api/admin/billing/:tenant/:month`. Tenant (x-offermesh-tenant-key): `GET /api/tenant/me|usage|billing/:month`, plus all brand-console writes. Agents (x-offermesh-gateway-key, per tenant): reserve/redeem/simulate via REST or MCP.
 
 ## v0.2.0 — the complete application
 
@@ -38,4 +46,4 @@ Mirrors the Proof Capsule named path: payload preview is public read-only; queue
 
 ## Boundaries / status
 
-Local sandbox demo. No live DUAL write, no public writes, no payments, no PII in public state, no deployment performed. **Ungated draft** — no external Cowork score claimed; gate required before any public/partner showing.
+Live demo at https://offermesh.vercel.app (repo: ro-ro-b/offermesh). No live DUAL writes, no payment processing, no PII in public state. Readiness claims live exclusively at `/api/ops/readiness` — no external review score is claimed until the independent review gate passes.

@@ -1,6 +1,6 @@
 {
   "name": "offermesh",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "OfferMesh — SmartNFT Agentic Offer Exchange demo. Brands mint verifiable offer tokens; AI agents discover, reserve, and redeem them under scoped mandates; brands pay per verified outcome. Local proof-first; no live DUAL writes.",
   "type": "module",
   "private": true,
