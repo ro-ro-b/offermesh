@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.4.0)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.5.0)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -13,7 +13,23 @@ OFFERMESH_GATEWAY_KEY=demo-gateway-key npm start   # http://127.0.0.1:4310/revol
 npm run test:all    # check + smoke + MCP smoke + persistence smoke
 ```
 
-Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence).
+Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE`, and `OFFERMESH_ALERT_*` for production-readiness posture.
+
+## v0.5.0 — production-readiness tranche
+
+This tranche reconciles the external Cowork result without inflating it: Revolv v0.4.0 received a scoped 9.8/10 Cowork pass for the next-six consolidation, but v0.5.x still needs a fresh broad production/partner-ready review after deployment.
+
+New production-readiness surfaces:
+
+- `/api/ops/production-readiness` — current production-pilot blockers and broad-readiness gate state.
+- `/api/product/public-identity` — canonical public URL, protected alias state, repo, route contract.
+- `/api/ops/customer-session-drill` — two-tenant browser/session isolation evidence checklist.
+- `/api/ops/incident-runbook` — monitors, fail-closed paths, rollback boundary, alerting status.
+- `/api/auth/session` — BYO OIDC bearer-session check; fails closed unless issuer/audience/JWKS env is configured.
+
+OIDC support is provider-ready but not provider-created by the app: configure issuer, audience, and JWKS URL from Auth0/Clerk/WorkOS, ensure tokens include `tenant_id` and `roles`, then run the two-browser tenant isolation drill before any production-ready claim. Payment capture and live DUAL writes remain separate approval gates.
+
+Production claim boundary: v0.5.0 can be called a production-readiness tranche or production-pilot candidate only after hosted checks pass. Do not call it production-ready or partner-ready until the exact deployed v0.5.x commit receives a fresh broad external Cowork pass.
 
 ## v0.4.0 — all-six next step surface
 
@@ -48,9 +64,9 @@ Six surfaces in one app: **Walkthrough** (90s reviewer script), **Agent** (auton
 - **Disclosure-native:** every offer carries `sponsored=true` + public incentive terms (MCP resource `revolv://disclosure-policy`; `offermesh://disclosure-policy` remains supported for compatibility).
 - **Truthful DUAL posture:** `/api/dual/status` — mainnet target, `writeMode=read_only`, `mainnetMappingPending=true`, no credentials stored, **no live DUAL writes**.
 
-## MCP surface (POST /mcp, JSON-RPC 2.0 — 17 tools)
+## MCP surface (POST /mcp, JSON-RPC 2.0 — 21 tools)
 
-`discover_offers` · `get_offer` · `check_eligibility` · `reserve_offer`* · `redeem_offer`* · `get_redemption_receipt` · `verify_receipt` · `get_dual_status` · `simulate_agent_run`* · `get_program_report` · `get_reward_epoch` · `get_proof_events` · `prepare_dual_sync` · `queue_dual_sync`* · `get_revolv_market_pack` · `get_dual_live_readback_plan` · `get_saas_hardening_contract` (* = auth-gated, fail closed with `agent_auth_required`).
+`discover_offers` · `get_offer` · `check_eligibility` · `reserve_offer`* · `redeem_offer`* · `get_redemption_receipt` · `verify_receipt` · `get_dual_status` · `simulate_agent_run`* · `get_program_report` · `get_reward_epoch` · `get_proof_events` · `prepare_dual_sync` · `queue_dual_sync`* · `get_revolv_market_pack` · `get_dual_live_readback_plan` · `get_saas_hardening_contract` · `get_public_identity` · `get_production_readiness` · `get_customer_session_drill` · `get_incident_runbook` (* = auth-gated, fail closed with `agent_auth_required`).
 
 ## DUAL sync lane (prepare → queue → execute)
 
@@ -58,4 +74,4 @@ Mirrors the Proof Capsule named path: payload preview is public read-only; queue
 
 ## Boundaries / status
 
-Live demo at https://offermesh.vercel.app (repo: ro-ro-b/offermesh). No live DUAL writes, no payment processing, no PII in public state. Readiness claims live exclusively at `/api/ops/readiness` — no external review score is claimed until the independent review gate passes.
+Live demo at https://offermesh.vercel.app/revolv (repo: ro-ro-b/offermesh). No live DUAL writes, no payment processing, no PII in public state. Readiness claims live at `/api/ops/readiness` and `/api/ops/production-readiness`. The v0.4.0 scoped Cowork pass is recorded, but broad production-ready/partner-ready language remains blocked until the v0.5.x broad review gate passes.

@@ -1,6 +1,6 @@
 {
   "name": "revolv-offermesh",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Revolv — SmartNFT offer network powered by the OfferMesh SaaS/protocol engine. Brands mint verifiable offers; agents discover, reserve, and redeem under scoped mandates; brands pay per verified outcome. Local proof-first; no live DUAL writes.",
   "type": "module",
   "private": true,
@@ -10,7 +10,8 @@
     "smoke": "node scripts/smoke.mjs",
     "smoke:mcp": "node scripts/smoke-mcp.mjs",
     "smoke:persistence": "node scripts/smoke-persistence.mjs",
-    "test:all": "node scripts/check.mjs && node scripts/smoke.mjs && node scripts/smoke-mcp.mjs && node scripts/smoke-persistence.mjs"
+    "smoke:production": "node scripts/smoke-production.mjs",
+    "test:all": "node scripts/check.mjs && node scripts/smoke.mjs && node scripts/smoke-mcp.mjs && node scripts/smoke-persistence.mjs && node scripts/smoke-production.mjs"
   },
   "engines": { "node": ">=20" }
 }

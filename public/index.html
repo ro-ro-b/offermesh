@@ -191,13 +191,16 @@
       <button class="ghost" onclick="loadHardening()">Hardening</button>
       <button class="ghost" onclick="loadMarketPack()">Market pack</button>
       <button class="ghost" onclick="loadDualPlan()">DUAL plan</button>
+      <button class="ghost" onclick="loadProdReady()">Production readiness</button>
+      <button class="ghost" onclick="loadIdentity()">Public identity</button>
+      <button class="ghost" onclick="loadRunbook()">Runbook</button>
       <pre id="eventsOut">—</pre>
     </div>
   </div>
 </div>
 
 <footer>
-  Revolv agent surface is MCP (POST /mcp), powered by the OfferMesh engine: 17 tools incl. discover_offers · check_eligibility · reserve_offer · redeem_offer · simulate_agent_run · verify_receipt · prepare_dual_sync · queue_dual_sync · get_revolv_market_pack · get_dual_live_readback_plan · get_saas_hardening_contract. Reserve/redeem/simulate fail closed (<code>agent_auth_required</code>) without a verified gateway key; DUAL execution additionally requires an operator token + explicit flag and is mapping-pending in this build. Local demo only — no live DUAL writes.
+  Revolv agent surface is MCP (POST /mcp), powered by the OfferMesh engine: 21 tools incl. discover_offers · check_eligibility · reserve_offer · redeem_offer · simulate_agent_run · verify_receipt · prepare_dual_sync · queue_dual_sync · get_revolv_market_pack · get_dual_live_readback_plan · get_saas_hardening_contract · get_public_identity · get_production_readiness · get_customer_session_drill · get_incident_runbook. Reserve/redeem/simulate fail closed (<code>agent_auth_required</code>) without a verified gateway key; DUAL execution additionally requires an operator token + explicit flag and is mapping-pending in this build. Production-ready language still requires a fresh broad Cowork gate — no live DUAL writes.
 </footer>
 
 <script>
@@ -374,6 +377,9 @@ async function loadMonitor() { const m = await get('/api/ops/monitor'); out('eve
 async function loadHardening() { out('eventsOut', await get('/api/ops/hardening')); }
 async function loadMarketPack() { out('eventsOut', await get('/api/product/market-pack')); }
 async function loadDualPlan() { out('eventsOut', await get('/api/dual/live-readback-plan')); }
+async function loadProdReady() { out('eventsOut', await get('/api/ops/production-readiness')); }
+async function loadIdentity() { out('eventsOut', await get('/api/product/public-identity')); }
+async function loadRunbook() { out('eventsOut', await get('/api/ops/incident-runbook')); }
 async function loadBundle() {
   const b = await get('/api/source/review-bundle');
   out('eventsOut', { file_count: b.file_count, bundle_hash: b.bundle_hash, files: b.files.map((f) => `${f.path} ${f.sha256.slice(0, 18)}…`) });

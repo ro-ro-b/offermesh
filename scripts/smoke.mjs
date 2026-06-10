@@ -1,4 +1,4 @@
-// Full-loop REST smoke against a spawned server instance — v0.4.0 all-six surface included.
+// Full-loop REST smoke against a spawned server instance — v0.5.0 production-readiness surface included.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -36,7 +36,7 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.4.0', status.body.version === '0.4.0', status.body.version);
+  assert('status v0.5.0', status.body.version === '0.5.0', status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const revolvPage = await getText('/revolv');
@@ -179,18 +179,29 @@ try {
   assert('readiness: storage pending without redis env', ids.durable_storage === 'pending');
   assert('readiness: rate limiting partial without redis env', ids.rate_limiting === 'partial');
   assert('readiness: contracts and packs exposed', ids.idp_contract === 'done' && ids.billing_policy === 'done' && ids.market_pack === 'done' && ids.dual_live_readback_plan === 'done');
-  assert('readiness: external gate honestly pending', ids.external_review_gate === 'pending');
+  assert('readiness: scoped external gate recorded', ids.external_review_gate === 'done');
+  assert('readiness: broad production gate honestly pending', ids.broad_production_review_gate === 'pending');
 
   const hard = await get('/api/ops/hardening');
   assert('hardening contract exposes local fallback', hard.body.rate_limit_mode.mode === 'local_token_bucket' && hard.body.controls.global_rate_limiting === 'local_token_bucket_fallback');
   const idp = await get('/api/ops/idp-contract');
   assert('idp contract not bound', idp.body.implementation_state === 'not_bound');
+  const session = await get('/api/auth/session');
+  assert('idp session fails closed when unbound', session.code === 401 && session.body.status === 'idp_not_bound');
   const billing = await get('/api/ops/billing-policy');
   assert('billing policy excludes payment capture', billing.body.payment_capture === false);
   const plan = await get('/api/dual/live-readback-plan');
   assert('dual live readback plan requires approval', plan.body.write_gate.required === true && plan.body.status === 'plan_ready_live_write_not_approved');
   const pack = await get('/api/product/market-pack');
   assert('market pack ready and caveated', pack.body.status === 'market_pack_ready' && pack.body.product === 'Revolv' && pack.body.caveats.length >= 3);
+  const ident = await get('/api/product/public-identity');
+  assert('public identity exposes canonical /revolv', ident.body.canonical_public_url.endsWith('/revolv') && ident.body.alias_public_state === 'protected_or_unverified');
+  const prod = await get('/api/ops/production-readiness');
+  assert('production readiness blocks broad claim', prod.body.production_ready_claim_allowed === false && prod.body.blockers.includes('broad_production_cowork_review'));
+  const drill = await get('/api/ops/customer-session-drill');
+  assert('customer session drill is explicit', drill.body.required_evidence.length >= 4);
+  const runbook = await get('/api/ops/incident-runbook');
+  assert('incident runbook exposes rollback', runbook.body.rollback.includes('Redeploy previous'));
 
   // DUAL sync lane fail-closed
   const prep = (await get('/api/dual/prepare/' + red1.body.receipt.id)).body;

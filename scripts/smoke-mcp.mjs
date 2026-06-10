@@ -32,14 +32,14 @@ try {
   if (!up) throw new Error('server did not start');
 
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
-  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.4.0');
+  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.5.0');
 
   const tools = await rpc('tools/list');
-  assert('17 tools listed', tools.result.tools.length === 17, tools.result.tools.length);
+  assert('21 tools listed', tools.result.tools.length === 21, tools.result.tools.length);
 
   const resources = await rpc('resources/list');
   assert('disclosure policy resource present', resources.result.resources.some((r) => r.uri === 'revolv://disclosure-policy'));
-  assert('v0.4.0 resources present', ['revolv://market-pack', 'revolv://dual-live-readback-plan', 'revolv://saas-hardening'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
+  assert('v0.5.0 resources present', ['revolv://market-pack', 'revolv://dual-live-readback-plan', 'revolv://saas-hardening', 'revolv://production-readiness', 'revolv://public-identity', 'revolv://customer-session-drill', 'revolv://incident-runbook'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
   const policy = await rpc('resources/read', { uri: 'revolv://disclosure-policy' });
   assert('disclosure policy readable', JSON.parse(policy.result.contents[0].text).sponsored_field_required === true);
   const marketResource = await rpc('resources/read', { uri: 'revolv://market-pack' });
@@ -111,6 +111,14 @@ try {
   assert('dual readback plan tool is planning only', plan.status === 'plan_ready_live_write_not_approved' && plan.write_gate.required === true);
   const hardening = toolText(await rpc('tools/call', { name: 'get_saas_hardening_contract', arguments: {} }));
   assert('hardening tool returns rate-limit posture', hardening.rate_limit_mode.mode === 'local_token_bucket');
+  const identity = toolText(await rpc('tools/call', { name: 'get_public_identity', arguments: {} }));
+  assert('public identity tool returns canonical /revolv', identity.canonical_public_url.endsWith('/revolv'));
+  const prod = toolText(await rpc('tools/call', { name: 'get_production_readiness', arguments: {} }));
+  assert('production readiness tool blocks broad claim', prod.production_ready_claim_allowed === false && prod.blockers.includes('broad_production_cowork_review'));
+  const drill = toolText(await rpc('tools/call', { name: 'get_customer_session_drill', arguments: {} }));
+  assert('customer session drill tool returns evidence checklist', drill.required_evidence.length >= 4);
+  const runbook = toolText(await rpc('tools/call', { name: 'get_incident_runbook', arguments: {} }));
+  assert('incident runbook tool returns fail-closed paths', runbook.fail_closed_paths.includes('OIDC when configured'));
 
   // ---- per-tenant gateway key works on MCP ----
   const tnt = await fetch(BASE + '/api/admin/tenants', { method: 'POST', headers: { 'content-type': 'application/json', 'x-offermesh-admin-token': 'mcp-admin' }, body: JSON.stringify({ name: 'MCP Tenant' }) }).then((r) => r.json());

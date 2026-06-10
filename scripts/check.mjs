@@ -104,13 +104,15 @@ const execAuthed = executeDualSync(store3, q.queue_id, { operatorTokenHeader: 'c
 assert('fully authorized execute is truthfully mapping-pending, no write', execAuthed.status === 'blocked_mapping_pending' && execAuthed.write_executed === false);
 delete process.env.OFFERMESH_OPERATOR_TOKEN;
 
-console.log('Tenancy + metering + rate limit (v0.4.0):');
+console.log('Tenancy + metering + rate limit + production readiness (v0.5.0):');
 {
   const { createTenant, resolveTenantByApiKey, resolveTenantByGatewayKey, rotateTenantKeys, setTenantStatus } = await import('../lib/tenants.mjs');
   const { meter, tenantUsage, billingRecord } = await import('../lib/metering.mjs');
   const { rateLimit, rateLimitMode } = await import('../lib/ratelimit.mjs');
   const { monitor, readiness, hardening } = await import('../lib/ops.mjs');
   const { billingPolicy, dualLiveReadbackPlan, idpAccessContract, marketPack } = await import('../lib/contracts.mjs');
+  const { productionReadiness, publicIdentity, customerSessionDrill, incidentRunbook } = await import('../lib/production.mjs');
+  const { oidcStatus, resolveOidcSession } = await import('../lib/idp.mjs');
   delete process.env.KV_REST_API_URL;
   delete process.env.KV_REST_API_TOKEN;
   delete process.env.UPSTASH_REDIS_REST_URL;
@@ -145,12 +147,21 @@ console.log('Tenancy + metering + rate limit (v0.4.0):');
   const mon = monitor(s);
   assert('ops monitor green on healthy store', mon.ok === true, JSON.stringify(mon.checks.filter((c) => !c.pass)));
   const rdy = readiness(s);
-  assert('readiness keeps external gate pending', rdy.items.find((i) => i.id === 'external_review_gate').status === 'pending');
+  assert('readiness records scoped Cowork pass', rdy.items.find((i) => i.id === 'external_review_gate').status === 'done');
+  assert('readiness keeps broad production gate pending', rdy.items.find((i) => i.id === 'broad_production_review_gate').status === 'pending');
   assert('hardening contract exposes fallback mode', hardening(s).rate_limit_mode.mode === 'local_token_bucket');
   assert('IdP contract is phase-2 only', idpAccessContract().implementation_state === 'not_bound');
+  assert('OIDC status fails closed when unbound', oidcStatus().fail_closed === true && oidcStatus().implementation_state === 'not_bound');
+  const noSession = await resolveOidcSession(s, { headers: {} });
+  assert('OIDC session fails closed without config', noSession.ok === false && noSession.status === 'idp_not_bound');
   assert('billing policy excludes payment capture', billingPolicy().payment_capture === false);
   assert('DUAL readback plan requires explicit approval', dualLiveReadbackPlan().write_gate.required === true);
   assert('market pack is Revolv-branded', marketPack().product === 'Revolv');
+  assert('public identity canonical URL is /revolv', publicIdentity().canonical_public_url.endsWith('/revolv'));
+  const prod = productionReadiness(s, mon);
+  assert('production readiness blocks broad claim', prod.production_ready_claim_allowed === false && prod.blockers.includes('broad_production_cowork_review'));
+  assert('customer session drill requires isolation evidence', customerSessionDrill(s).required_evidence.length >= 4);
+  assert('incident runbook lists fail-closed paths', incidentRunbook().fail_closed_paths.includes('OIDC when configured'));
 }
 
 if (failures > 0) { console.error(`\ncheck FAILED (${failures})`); process.exit(1); }
