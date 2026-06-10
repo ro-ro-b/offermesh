@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.8.0)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.9.0)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -14,6 +14,12 @@ npm run test:all    # check + smoke + MCP smoke + persistence smoke
 ```
 
 Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE`, `OFFERMESH_ALERT_*`, and non-secret `REVOLV_BROAD_COWORK_*` review-evidence env for production/partner claim posture.
+
+## v0.9.0 — partner-pilot 9.8 candidate proof
+
+This pass adds replayable partner-pilot proof evidence over the exact v0.8.0 UI. `/api/ops/partner-pilot-proof` and MCP `get_partner_pilot_proof` run a scratch proof harness that demonstrates two-tenant hashed-key isolation, brand offer creation, agent reserve/redeem under a mandate, verifier-approved receipt release, tamper rejection, sponsored-offer opt-out, per-verified-outcome reporting, DUAL preview without writes, and payment/live-write exclusions. The proof returns sanitized evidence only and does not mutate production customer state.
+
+This makes Revolv a stronger **partner-pilot 9.8 candidate**, not an automatic 9.8 claim. Actual `9.8/10`, partner-ready, or production-ready language still requires fresh broad external Claude Cowork review on the exact deployed v0.9.0 build. Full production remains a separate gate for custom domain, OIDC login, two-browser customer sessions, fine-grained concurrency, alerting, DUAL readback mapping, and any payment/settlement path.
 
 ## v0.8.0 — exact supplied UI package
 
@@ -57,7 +63,7 @@ New production-readiness surfaces:
 
 OIDC support is provider-ready but not provider-created by the app: configure issuer, audience, and JWKS URL from Auth0/Clerk/WorkOS, ensure tokens include `tenant_id` and `roles`, then run the two-browser tenant isolation drill before any production-ready claim. Payment capture and live DUAL writes remain separate approval gates.
 
-Production claim boundary: v0.8.0 can be called a production-readiness tranche or production-pilot candidate only after hosted checks pass. Do not call it production-ready or partner-ready until the exact deployed v0.8.0 commit receives a fresh broad external Cowork pass.
+Production claim boundary: v0.9.0 can be called a partner-pilot candidate only after hosted checks pass. Do not call it production-ready, partner-ready, or 9.8/10 until the exact deployed v0.9.0 commit receives a fresh broad external Cowork pass.
 
 ## v0.4.0 — all-six next step surface
 
@@ -92,9 +98,9 @@ Six surfaces in one app: **Walkthrough** (90s reviewer script), **Agent** (auton
 - **Disclosure-native:** every offer carries `sponsored=true` + public incentive terms (MCP resource `revolv://disclosure-policy`; `offermesh://disclosure-policy` remains supported for compatibility).
 - **Truthful DUAL posture:** `/api/dual/status` — mainnet target, `writeMode=read_only`, `mainnetMappingPending=true`, no credentials stored, **no live DUAL writes**.
 
-## MCP surface (POST /mcp, JSON-RPC 2.0 — 26 tools)
+## MCP surface (POST /mcp, JSON-RPC 2.0 — 27 tools)
 
-`discover_offers` · `get_offer` · `check_eligibility` · `reserve_offer`* · `redeem_offer`* · `get_redemption_receipt` · `verify_receipt` · `get_dual_status` · `simulate_agent_run`* · `get_program_report` · `get_reward_epoch` · `get_proof_events` · `prepare_dual_sync` · `queue_dual_sync`* · `get_revolv_market_pack` · `get_dual_live_readback_plan` · `get_saas_hardening_contract` · `get_public_identity` · `get_production_readiness` · `get_customer_session_drill` · `get_incident_runbook` · `get_agent_marketplace` · `get_brand_dashboard` · `get_proof_room` · `get_reference_agent_guide` · `get_partner_hardening_plan` (* = auth-gated, fail closed with `agent_auth_required`).
+`discover_offers` · `get_offer` · `check_eligibility` · `reserve_offer`* · `redeem_offer`* · `get_redemption_receipt` · `verify_receipt` · `get_dual_status` · `simulate_agent_run`* · `get_program_report` · `get_reward_epoch` · `get_proof_events` · `prepare_dual_sync` · `queue_dual_sync`* · `get_revolv_market_pack` · `get_dual_live_readback_plan` · `get_saas_hardening_contract` · `get_public_identity` · `get_production_readiness` · `get_customer_session_drill` · `get_incident_runbook` · `get_agent_marketplace` · `get_brand_dashboard` · `get_proof_room` · `get_reference_agent_guide` · `get_partner_hardening_plan` · `get_partner_pilot_proof` (* = auth-gated, fail closed with `agent_auth_required`).
 
 ## DUAL sync lane (prepare → queue → execute)
 
@@ -102,4 +108,4 @@ Mirrors the Proof Capsule named path: payload preview is public read-only; queue
 
 ## Boundaries / status
 
-Live demo at https://offermesh.vercel.app/revolv (repo: ro-ro-b/offermesh). No live DUAL writes, no payment processing, no PII in public state. Readiness claims live at `/api/ops/readiness` and `/api/ops/production-readiness`. The v0.4.0 scoped Cowork pass is recorded, but broad production-ready/partner-ready language remains blocked until the v0.8.0 broad review gate passes.
+Live demo at https://offermesh.vercel.app/revolv (repo: ro-ro-b/offermesh). No live DUAL writes, no payment processing, no PII in public state. Readiness claims live at `/api/ops/readiness`, `/api/ops/production-readiness`, and `/api/ops/partner-pilot-proof`. The v0.4.0 scoped Cowork pass is recorded, but broad production-ready/partner-ready/9.8 language remains blocked until the v0.9.0 broad review gate passes.

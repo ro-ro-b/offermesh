@@ -1,4 +1,4 @@
-// Full-loop REST smoke against a spawned server instance — v0.8.0 command-centre UI included.
+// Full-loop REST smoke against a spawned server instance — v0.9.0 partner-pilot proof included.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -36,7 +36,7 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.8.0', status.body.version === '0.8.0', status.body.version);
+  assert('status v0.9.0', status.body.version === '0.9.0', status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const revolvPage = await getText('/revolv');
@@ -124,7 +124,7 @@ try {
   const badStr = await post('/api/programs', { brandRef: 'brand:aurora-audio', name: 'x'.repeat(500), budgetEscrow: 10 }, CONSOLE);
   assert('validation rejects oversized string', badStr.code === 422);
 
-  // v0.8.0 product surfaces
+  // v0.9.0 product surfaces and partner-pilot proof
   const market = await get('/api/product/agent-marketplace');
   assert('agent marketplace returns structured offers', market.code === 200 && market.body.status === 'agent_marketplace_ready' && market.body.offers.every((o) => o.sponsored === true));
   const refAgent = await get('/api/product/reference-agent');
@@ -152,7 +152,9 @@ try {
   const demo = await post('/api/product/partner-demo', { brandName: 'Smoke Demo Brand' }, { ...CONSOLE, ...KEY });
   assert('partner demo completes', demo.code === 201 && demo.body.status === 'partner_demo_completed' && demo.body.steps.some((step) => step.status === 'tampered_receipt_flagged_for_review'));
   const partnerHardening = await get('/api/ops/partner-hardening');
-  assert('partner hardening plan separates done from pending gates', partnerHardening.body.lanes.some((lane) => lane.id === 'guided_offer_creation' && lane.status === 'done') && partnerHardening.body.partner_ready_claim_allowed === false);
+  assert('partner hardening plan separates done from pending gates', partnerHardening.body.lanes.some((lane) => lane.id === 'guided_offer_creation' && lane.status === 'done') && partnerHardening.body.lanes.some((lane) => lane.id === 'partner_pilot_proof' && lane.status === 'done') && partnerHardening.body.partner_ready_claim_allowed === false);
+  const pilotProof = await get('/api/ops/partner-pilot-proof');
+  assert('partner pilot proof is replayable and bounded', pilotProof.body.status === 'partner_pilot_proof_ready' && pilotProof.body.summary.failed === 0 && pilotProof.body.claim_boundary.claim_allowed === false && pilotProof.body.evidence.proof_room.verifier.value_released === true, pilotProof.body);
 
   // ---- admin plane ----
   const adminNo = await get('/api/admin/tenants');
@@ -217,6 +219,7 @@ try {
   assert('readiness: storage pending without redis env', ids.durable_storage === 'pending');
   assert('readiness: rate limiting partial without redis env', ids.rate_limiting === 'partial');
   assert('readiness: contracts and packs exposed', ids.idp_contract === 'done' && ids.billing_policy === 'done' && ids.market_pack === 'done' && ids.dual_live_readback_plan === 'done');
+  assert('readiness: partner pilot proof done', ids.partner_pilot_proof === 'done');
   assert('readiness: scoped external gate recorded', ids.external_review_gate === 'done');
   assert('readiness: broad production gate honestly pending', ids.broad_production_review_gate === 'pending');
 
@@ -236,6 +239,7 @@ try {
   assert('public identity exposes canonical /revolv', ident.body.canonical_public_url.endsWith('/revolv') && ident.body.alias_public_state === 'protected_or_unverified');
   const prod = await get('/api/ops/production-readiness');
   assert('production readiness blocks broad claim', prod.body.production_ready_claim_allowed === false && prod.body.blockers.includes('broad_production_cowork_review'));
+  assert('production readiness records partner proof', prod.body.items.some((i) => i.id === 'partner_pilot_proof' && i.status === 'done'));
   assert('partner-ready pilot claim blocked before broad review', prod.body.partner_ready_claim_allowed === false && prod.body.claim_profiles.partner_ready_pilot.blockers.includes('broad_partner_ready_cowork_review'));
   const drill = await get('/api/ops/customer-session-drill');
   assert('customer session drill is explicit', drill.body.required_evidence.length >= 4);

@@ -9,6 +9,7 @@ import { escrowInvariantOk, pauseProgram, resumeProgram, topUpProgram, createOff
 import { runAgent } from '../lib/agentSim.mjs';
 import { prepareDualPayload, queueDualSync, executeDualSync } from '../lib/dualSync.mjs';
 import { createOfferFlow, runPartnerDemo, proofRoom, brandDashboard, agentMarketplace, referenceAgentGuide, partnerHardeningPlan } from '../lib/productSurfaces.mjs';
+import { partnerPilotProof, partnerPilotProofStatus } from '../lib/pilotProof.mjs';
 
 let failures = 0;
 function assert(name, cond) {
@@ -105,7 +106,7 @@ const execAuthed = executeDualSync(store3, q.queue_id, { operatorTokenHeader: 'c
 assert('fully authorized execute is truthfully mapping-pending, no write', execAuthed.status === 'blocked_mapping_pending' && execAuthed.write_executed === false);
 delete process.env.OFFERMESH_OPERATOR_TOKEN;
 
-console.log('Tenancy + metering + rate limit + production readiness + product surfaces (v0.8.0):');
+console.log('Tenancy + metering + rate limit + production readiness + product surfaces (v0.9.0):');
 {
   const { createTenant, resolveTenantByApiKey, resolveTenantByGatewayKey, rotateTenantKeys, setTenantStatus } = await import('../lib/tenants.mjs');
   const { meter, tenantUsage, billingRecord } = await import('../lib/metering.mjs');
@@ -159,6 +160,10 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   assert('reference agent guide exposes MCP loop', guide.loop.includes('discover_offers') && guide.required_auth.live_dual_execution.includes('operator-gated'));
   const demo = runPartnerDemo(s, issued.tenant.id, { brandName: 'Check Demo' }, 'http://check.local');
   assert('partner demo completes offer loop', demo.status === 'partner_demo_completed' && demo.steps.some((step) => step.label.includes('tampered') && step.status === 'tampered_receipt_flagged_for_review'));
+  const pilotProof = partnerPilotProof({ baseUrl: 'http://check.local', version: '0.9.0' });
+  assert('partner pilot proof passes every check', pilotProof.status === 'partner_pilot_proof_ready' && pilotProof.summary.passed === pilotProof.summary.total && pilotProof.evidence.proof_room.verifier.value_released === true, pilotProof.summary);
+  const pilotStatus = partnerPilotProofStatus();
+  assert('partner pilot proof status is reviewable', pilotStatus.ok === true && pilotStatus.evidence_hash.startsWith('0x'));
 
   const fakeReq = { headers: { 'x-forwarded-for': 'check-client' }, socket: {} };
   let blocked = false;
@@ -170,6 +175,7 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   assert('ops monitor green on healthy store', mon.ok === true, JSON.stringify(mon.checks.filter((c) => !c.pass)));
   const rdy = readiness(s);
   assert('readiness records scoped Cowork pass', rdy.items.find((i) => i.id === 'external_review_gate').status === 'done');
+  assert('readiness records partner pilot proof', rdy.items.find((i) => i.id === 'partner_pilot_proof').status === 'done');
   assert('readiness keeps broad production gate pending', rdy.items.find((i) => i.id === 'broad_production_review_gate').status === 'pending');
   assert('hardening contract exposes fallback mode', hardening(s).rate_limit_mode.mode === 'local_token_bucket');
   assert('IdP contract is phase-2 only', idpAccessContract().implementation_state === 'not_bound');
@@ -182,8 +188,9 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   assert('public identity canonical URL is /revolv', publicIdentity().canonical_public_url.endsWith('/revolv'));
   const prod = productionReadiness(s, mon);
   assert('production readiness blocks broad claim', prod.production_ready_claim_allowed === false && prod.blockers.includes('broad_production_cowork_review'));
+  assert('production readiness records partner pilot proof', prod.items.find((i) => i.id === 'partner_pilot_proof').status === 'done');
   assert('partner-ready pilot claim blocked before broad review', prod.partner_ready_claim_allowed === false && prod.claim_profiles.partner_ready_pilot.blockers.includes('broad_partner_ready_cowork_review'));
-  const plan = partnerHardeningPlan({ readiness: rdy, productionReadiness: prod, hardening: hardening(s), idp: idpAccessContract(), publicIdentity: publicIdentity(), monitor: mon });
+  const plan = partnerHardeningPlan({ readiness: rdy, productionReadiness: prod, hardening: hardening(s), idp: idpAccessContract(), publicIdentity: publicIdentity(), monitor: mon, pilotProof: pilotStatus });
   assert('partner hardening plan shows done and pending lanes', plan.lanes.some((lane) => lane.id === 'guided_offer_creation' && lane.status === 'done') && plan.lanes.some((lane) => lane.id === 'broad_cowork_review' && lane.status === 'pending'));
   const prevReviewEnv = {
     status: process.env.REVOLV_BROAD_COWORK_STATUS,
@@ -193,7 +200,7 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   };
   process.env.REVOLV_BROAD_COWORK_STATUS = 'passed';
   process.env.REVOLV_BROAD_COWORK_SCORE = '9.8';
-  process.env.REVOLV_BROAD_COWORK_VERSION = '0.8.0';
+  process.env.REVOLV_BROAD_COWORK_VERSION = '0.9.0';
   process.env.REVOLV_BROAD_COWORK_CLAIM = 'partner_ready_pilot';
   s.remote = { kind: 'upstash_redis_rest' };
   const partnerProd = productionReadiness(s, mon);
