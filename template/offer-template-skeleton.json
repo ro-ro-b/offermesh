@@ -1,0 +1,38 @@
+{
+  "name": "OfferMesh Offer Token",
+  "slug": "offermesh-offer-token",
+  "schema_version": "dual-template-skeleton-v2",
+  "dual_pattern": "Agent Mandates",
+  "asset_type": "rights",
+  "write_boundary": "Local proof-first MVP; no live DUAL write until operator approval and template readiness are confirmed.",
+  "object_model": {
+    "token": "Brand offer token with escrowed incentive and redemption lifecycle",
+    "standard": "Offer token + redemption receipt",
+    "immutable_fields": [
+      { "key": "offer_id", "type": "string", "required": true },
+      { "key": "issuer_ref", "type": "string", "required": true },
+      { "key": "source_hash", "type": "hash", "required": true },
+      { "key": "sponsored", "type": "boolean", "required": true }
+    ],
+    "mutable_fields": [
+      { "key": "current_state", "type": "enum", "values": ["published", "discovered", "reserved", "redeemed", "settled", "expired", "clawed_back", "flagged_review"], "required": true },
+      { "key": "last_event_hash", "type": "hash", "required": false }
+    ],
+    "private_fields": [
+      { "key": "brand_notes", "type": "external_ref", "required": false },
+      { "key": "evidence_ref", "type": "external_ref", "required": false }
+    ]
+  },
+  "participant_roles": [
+    { "id": "brand", "label": "Brand", "permissions": ["create_program", "create_offer", "read_report"] },
+    { "id": "agent", "label": "Agent", "permissions": ["discover", "check_eligibility", "reserve", "redeem"] },
+    { "id": "principal", "label": "Principal", "permissions": ["create_mandate", "revoke_mandate", "policy_filter_sponsored"] },
+    { "id": "verifier", "label": "Verifier", "permissions": ["verify_receipt", "dispute_receipt"] }
+  ],
+  "proof_events": [
+    "program-created", "offer-published", "offer-discovered", "offer-reserved",
+    "offer-redeemed", "action-settled", "exception-flagged", "offer-clawed-back",
+    "offer-expired", "mandate-signed", "mandate-revoked"
+  ],
+  "policy_controls": ["per_agent_redemption_cap", "per_epoch_redemption_cap", "escrowed_budget", "no_pii_public_state", "machine_readable_sponsorship_disclosure", "simulated_rewards_pending_legal_review"]
+}
