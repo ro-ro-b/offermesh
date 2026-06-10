@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.3.0)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.3.1)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -15,7 +15,7 @@ npm run test:all    # check (42) + smoke (50) + MCP smoke (25) + persistence smo
 
 Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence).
 
-## v0.3.0 — Revolv brand merge + SaaS layer
+## v0.3.1 — Revolv brand merge over the v0.3.0 SaaS layer
 
 Revolv is now the product brand. OfferMesh remains the engine name in API-key headers, MCP compatibility resource URIs, repo continuity, and implementation internals. The readiness scorecard includes `brand_merge=done` to make that boundary explicit.
 

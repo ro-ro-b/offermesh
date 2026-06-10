@@ -34,7 +34,7 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.3.0', status.body.version === '0.3.0', status.body.version);
+  assert('status v0.3.1', status.body.version === '0.3.1', status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const dual = await get('/api/dual/status');
