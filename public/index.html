@@ -598,6 +598,263 @@
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:10px;
   }
+  .status-chips {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:14px;
+  }
+  .command-centre {
+    display:grid;
+    grid-template-columns:minmax(0,1.2fr) minmax(300px,0.8fr);
+    gap:16px;
+    margin:0 0 26px;
+    align-items:stretch;
+  }
+  .command-panel {
+    min-width:0;
+    padding:18px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    background:#fff;
+    box-shadow:var(--shadow-card);
+  }
+  .command-panel.accent {
+    background:linear-gradient(180deg,#FFFFFF 0%,#F7FCFD 100%);
+    border-color:rgba(32,148,162,0.18);
+  }
+  .panel-title {
+    margin:0 0 8px;
+    color:var(--ink-700);
+    font-family:var(--font-serif);
+    font-size:25px;
+    font-weight:400;
+    line-height:1.16;
+    text-transform:none;
+  }
+  .panel-copy {
+    margin:0 0 14px;
+    color:var(--ink-500);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .command-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .mini-flow {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:9px;
+    margin-top:14px;
+  }
+  .mini-flow .flow-step,
+  .role-card,
+  .lifecycle-step,
+  .readiness-lane,
+  .proof-summary-card,
+  .story-card,
+  .market-card,
+  .dashboard-card {
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    background:#FBFDFD;
+    padding:12px;
+    min-width:0;
+  }
+  .flow-step span,
+  .role-card span,
+  .lifecycle-step span,
+  .readiness-lane span,
+  .proof-summary-card span,
+  .story-card span,
+  .market-card span,
+  .dashboard-card span {
+    display:block;
+    color:var(--ink-400);
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:0;
+    text-transform:uppercase;
+  }
+  .flow-step b,
+  .role-card b,
+  .lifecycle-step b,
+  .readiness-lane b,
+  .proof-summary-card b,
+  .story-card b,
+  .market-card b,
+  .dashboard-card b {
+    display:block;
+    margin-top:4px;
+    color:var(--ink-700);
+    font-size:13px;
+    line-height:1.32;
+  }
+  .command-stack {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:16px;
+  }
+  .proof-hero {
+    display:grid;
+    gap:10px;
+  }
+  .proof-hero .proof-title {
+    color:var(--ink-700);
+    font-size:17px;
+    font-weight:800;
+    line-height:1.25;
+  }
+  .proof-hero .proof-path {
+    display:inline-flex;
+    width:max-content;
+    max-width:100%;
+    overflow-wrap:anywhere;
+  }
+  .role-tabs {
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:12px 0;
+  }
+  .role-tabs button {
+    min-height:32px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-full);
+    background:#fff;
+    color:var(--ink-500);
+    padding:7px 11px;
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+  }
+  .role-tabs button.active {
+    background:var(--teal-50);
+    border-color:rgba(32,148,162,0.24);
+    color:var(--teal-700);
+  }
+  .role-card ul,
+  .readiness-list,
+  .story-list,
+  .dashboard-actions-list {
+    display:grid;
+    gap:7px;
+    margin:9px 0 0;
+    padding:0;
+  }
+  .role-card li,
+  .readiness-list li,
+  .story-list li,
+  .dashboard-actions-list li {
+    list-style:none;
+    color:var(--ink-500);
+    font-size:12.5px;
+    line-height:1.38;
+  }
+  .role-card li::before,
+  .readiness-list li::before,
+  .story-list li::before,
+  .dashboard-actions-list li::before {
+    content:"";
+    display:inline-block;
+    width:6px;
+    height:6px;
+    margin:0 7px 1px 0;
+    border-radius:999px;
+    background:var(--teal-500);
+  }
+  .lifecycle-rail {
+    display:grid;
+    grid-template-columns:repeat(7,minmax(96px,1fr));
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  .lifecycle-step {
+    position:relative;
+    min-height:96px;
+  }
+  .lifecycle-step.done {
+    background:rgba(43,182,115,0.08);
+    border-color:rgba(43,182,115,0.2);
+  }
+  .lifecycle-step.active {
+    background:#FFF8EA;
+    border-color:rgba(232,169,59,0.32);
+  }
+  .lifecycle-step.blocked {
+    background:rgba(229,72,77,0.06);
+    border-color:rgba(229,72,77,0.18);
+  }
+  .readiness-grid,
+  .proof-summary-grid,
+  .story-cards,
+  .market-grid,
+  .dashboard-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+  .readiness-lane.done { background:rgba(43,182,115,0.08); border-color:rgba(43,182,115,0.2); }
+  .readiness-lane.partial { background:#FFF8EA; border-color:rgba(232,169,59,0.3); }
+  .readiness-lane.pending { background:#fff; }
+  .readiness-lane.excluded { background:rgba(14,42,51,0.035); }
+  .story-card strong,
+  .market-card strong,
+  .dashboard-card strong {
+    display:block;
+    margin:4px 0;
+    color:var(--ink-700);
+    font-size:15px;
+    line-height:1.3;
+  }
+  .story-card.done { border-color:rgba(43,182,115,0.24); background:rgba(43,182,115,0.07); }
+  .story-card.blocked { border-color:rgba(229,72,77,0.18); background:rgba(229,72,77,0.06); }
+  .summary-strip {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:10px 0;
+  }
+  .summary-pill {
+    display:inline-flex;
+    align-items:center;
+    min-height:27px;
+    padding:5px 9px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-full);
+    background:#fff;
+    color:var(--ink-500);
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+  }
+  .data-detail {
+    margin-top:12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    background:#fff;
+    overflow:hidden;
+  }
+  .data-detail summary {
+    min-height:38px;
+    display:flex;
+    align-items:center;
+    padding:8px 12px;
+    color:var(--ink-500);
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .data-detail pre {
+    margin:0;
+    border-width:1px 0 0;
+    border-radius:0;
+    max-height:280px;
+  }
   .linkout {
     color:var(--teal-600);
     font-weight:800;
@@ -607,12 +864,13 @@
   @media (max-width:1080px) {
     .hero { grid-template-columns:1fr; }
     .status-card { max-width:680px; }
+    .command-centre { grid-template-columns:1fr; }
     .story-header { grid-template-columns:1fr; }
     .journey-rail { grid-template-columns:repeat(2,minmax(0,1fr)); }
   }
   @media (max-width:900px) {
     .grid { grid-template-columns:1fr; }
-    .persona-grid, .proof-grid, .metric-grid, .wizard-grid { grid-template-columns:1fr; }
+    .persona-grid, .proof-grid, .metric-grid, .wizard-grid, .mini-flow, .readiness-grid, .proof-summary-grid, .story-cards, .market-grid, .dashboard-grid { grid-template-columns:1fr; }
   }
   @media (max-width:720px) {
     .shell { --shell-gutter:16px; padding-bottom:64px; }
@@ -664,10 +922,15 @@
 
 <section class="hero" aria-label="Revolv DUAL product overview">
   <div class="hero-copy">
-    <span class="eyebrow">DUAL UI standard</span>
-    <h1>Revolv</h1>
-    <p class="sub">Revolv turns brand offers into verifiable options that AI agents can evaluate without covert steering. Brands fund outcome-backed offers, buyers keep control through mandates, and verifiers decide which redemptions count.</p>
-    <div class="hero-actions" aria-label="Current product boundaries">
+    <span class="eyebrow">Partner command centre</span>
+    <h1>Revolv command centre</h1>
+    <p class="sub">A brand creates a proof-backed offer, makes it visible to AI agents, and pays only when a verifier accepts the redemption. The same screen shows the agent marketplace, buyer mandate, proof room, and readiness blockers.</p>
+    <div class="hero-actions" aria-label="Primary Revolv actions">
+      <button class="act" onclick="goCommand('brand')">Create offer</button>
+      <button class="ghost" onclick="goCommand('demo')">Run demo loop</button>
+      <button class="ghost" onclick="goCommand('proof')">Open proof room</button>
+    </div>
+    <div class="status-chips" aria-label="Current product boundaries">
       <span class="chip-meta"><span class="dot"></span><b>Read-only</b> DUAL posture</span>
       <span class="chip-meta"><b>Scoped</b> v0.4 Cowork pass</span>
       <span class="chip-meta" id="claimChip"><b>Partner gate</b> pending</span>
@@ -681,6 +944,57 @@
     <div class="kv" id="engineLine">Product engine loading...</div>
     <div class="kv" id="claimLine"><b>Claim boundary:</b> partner-ready pilot language still requires the fresh broad Cowork gate; full production-ready has separate live/provider blockers.</div>
   </aside>
+</section>
+
+<section class="command-centre" aria-label="Revolv create-offer command centre">
+  <div class="command-panel accent">
+    <span class="eyebrow">Create Offer</span>
+    <h2 class="panel-title">A brand can launch a verifiable offer in one controlled path.</h2>
+    <p class="panel-copy">The command centre creates the brand workspace, budget-capped program, agent-visible offer, proof-room link, and dashboard evidence. It keeps the live DUAL and payment lanes locked until separately approved.</p>
+    <div class="command-actions">
+      <button class="act" onclick="goCommand('brand')">Create offer</button>
+      <button class="ghost" onclick="goCommand('agent')">Preview marketplace</button>
+      <button class="ghost" onclick="goCommand('roles')">Switch roles</button>
+    </div>
+    <div class="mini-flow" aria-label="Brand offer creation path">
+      <div class="flow-step"><span>01 Brand</span><b>Name the brand and offer.</b></div>
+      <div class="flow-step"><span>02 Budget</span><b>Set outcome cap and incentive value.</b></div>
+      <div class="flow-step"><span>03 Proof</span><b>Share a proof room before claiming readiness.</b></div>
+    </div>
+  </div>
+
+  <div class="command-stack">
+    <div class="command-panel">
+      <span class="eyebrow">Proof room hero</span>
+      <div id="proofHero" class="proof-hero">
+        <div class="proof-title">Proof room loading...</div>
+        <div class="kv">Run the demo loop or create an offer to generate a live proof-room card.</div>
+      </div>
+    </div>
+    <div class="command-panel">
+      <span class="eyebrow">Role-based views</span>
+      <div class="role-tabs" aria-label="Switch product role">
+        <button id="roleBtn-brand" class="active" onclick="showRole('brand')">Brand</button>
+        <button id="roleBtn-agent" onclick="showRole('agent')">Agent platform</button>
+        <button id="roleBtn-buyer" onclick="showRole('buyer')">Buyer</button>
+        <button id="roleBtn-verifier" onclick="showRole('verifier')">Verifier</button>
+        <button id="roleBtn-operator" onclick="showRole('operator')">Operator</button>
+      </div>
+      <div id="rolePanel" class="role-card">Loading role view...</div>
+    </div>
+  </div>
+
+  <div class="command-panel full">
+    <span class="eyebrow">Offer lifecycle</span>
+    <h2 class="panel-title">From draft offer to proof room.</h2>
+    <div id="lifecycleRail" class="lifecycle-rail" aria-label="Live offer lifecycle"></div>
+  </div>
+
+  <div class="command-panel full">
+    <span class="eyebrow">Partner readiness rail</span>
+    <h2 class="panel-title">What is ready, what is blocked, and what remains excluded.</h2>
+    <div id="readinessRail" class="readiness-grid" aria-label="Partner readiness gates"></div>
+  </div>
 </section>
 
 <section class="story-band" aria-label="Revolv user story">
@@ -764,12 +1078,12 @@
 </section>
 
 <nav id="tabs" aria-label="Revolv workflow tabs">
-  <button data-tab="walkthrough" class="active">Proof run</button>
-  <button data-tab="agent">Agent view</button>
-  <button data-tab="brand">Brand view</button>
+  <button data-tab="walkthrough" class="active">Demo loop</button>
+  <button data-tab="agent">Agent marketplace</button>
+  <button data-tab="brand">Brand command</button>
   <button data-tab="principal">Buyer mandate</button>
-  <button data-tab="verifier">Verifier</button>
-  <button data-tab="proof">Readiness</button>
+  <button data-tab="verifier">Proof room</button>
+  <button data-tab="proof">Readiness rail</button>
 </nav>
 
 <!-- WALKTHROUGH -->
@@ -780,7 +1094,11 @@
       <div class="kv"><b>One run:</b> create a fresh brand offer, show the reference agent redeeming it, prove sponsored opt-out, reject a tampered receipt, and return the brand outcome report.</div>
       <button class="act" onclick="runPartnerDemoMode()">Run partner demo mode</button>
       <button class="ghost" onclick="loadLatestProofRoom()">Latest proof room</button>
-      <pre id="demoOut">Partner demo output appears here.</pre>
+      <div id="demoStory" class="story-cards"></div>
+      <details class="data-detail">
+        <summary>Raw demo payload</summary>
+        <pre id="demoOut">Partner demo output appears here.</pre>
+      </details>
     </div>
     <div class="card">
       <h2>Reviewer walkthrough (≈90s)</h2>
@@ -797,7 +1115,10 @@
       <button class="ghost" onclick="runNarrow()">3. Narrow mandate</button>
       <button class="ghost" onclick="runTamper()">4. Red-team tamper</button>
       <button class="ghost" onclick="showReport()">5. Brand report</button>
-      <pre id="walkOut">Output appears here.</pre>
+      <details class="data-detail">
+        <summary>Raw walkthrough payload</summary>
+        <pre id="walkOut">Output appears here.</pre>
+      </details>
     </div>
     <div class="card">
       <h2>Live offers</h2>
@@ -863,7 +1184,11 @@
       <input id="wTerms" placeholder="Proof terms" value="18-unit upgrade credit released only after verified booking receipt">
       <button class="act" onclick="guidedCreateOffer()">Create offer</button>
       <button class="ghost" onclick="loadDashboard()">Refresh dashboard</button>
-      <pre id="wizardOut">Created offer, agent preview, and proof-room link appear here.</pre>
+      <div id="wizardSummary" class="proof-summary-grid"></div>
+      <details class="data-detail">
+        <summary>Raw create-offer payload</summary>
+        <pre id="wizardOut">Created offer, agent preview, and proof-room link appear here.</pre>
+      </details>
     </div>
     <div class="card full">
       <h2>Brand dashboard</h2>
@@ -929,7 +1254,11 @@
       <input id="proofRoomId" placeholder="Offer, receipt, or program id">
       <button class="act" onclick="loadProofRoom()">Load proof room</button>
       <button class="ghost" onclick="openProofRoom()">Open public proof room</button>
-      <pre id="proofRoomOut">—</pre>
+      <div id="proofRoomSummary" class="proof-summary-grid"></div>
+      <details class="data-detail">
+        <summary>Raw proof-room payload</summary>
+        <pre id="proofRoomOut">—</pre>
+      </details>
     </div>
   </div>
 </div>
@@ -979,14 +1308,27 @@ const out = (el, v) => document.getElementById(el).textContent = typeof v === 's
 const KEY = { 'x-offermesh-gateway-key': 'demo-gateway-key' };
 const CONSOLE_KEY = { 'x-offermesh-tenant-key': 'demo-console-key' };
 let SI = null;
+let preferredProofId = null;
 
 // tabs
 document.getElementById('tabs').addEventListener('click', (e) => {
   if (e.target.tagName !== 'BUTTON') return;
-  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b === e.target));
-  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-' + e.target.dataset.tab));
-  refreshAll();
+  switchTab(e.target.dataset.tab);
 });
+
+function switchTab(tab) {
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-' + tab));
+  refreshAll();
+}
+
+function goCommand(target) {
+  if (target === 'brand') switchTab('brand');
+  else if (target === 'demo') { switchTab('walkthrough'); runPartnerDemoMode(); }
+  else if (target === 'proof') { switchTab('verifier'); loadLatestProofRoom(); }
+  else if (target === 'agent') switchTab('agent');
+  else if (target === 'roles') document.getElementById('rolePanel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 function offerHtml(o) {
   return `<div class="offer"><span class="t">${o.title}</span><span class="state ${o.state}">${o.state}</span>
@@ -1002,14 +1344,67 @@ function metricCard(label, value) {
   return `<div class="metric-card"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
 }
 
+const ROLES = {
+  brand: {
+    title: 'Brand command view',
+    subtitle: 'Create the offer, set the budget cap, and review paid outcomes.',
+    actions: ['Create brand, program, and offer in one flow', 'Inspect verified outcomes and rejected receipts', 'Share the proof room with a partner reviewer'],
+    proof: 'Brand dashboard, proof room, and per-verified-outcome report',
+    boundary: 'No payment capture, wallet movement, live DUAL write, or production-ready claim.'
+  },
+  agent: {
+    title: 'Agent-platform view',
+    subtitle: 'Discover structured offers without covert steering.',
+    actions: ['Read sponsored disclosure and terms hashes', 'Check eligibility against the buyer mandate', 'Reserve and redeem only with a verified gateway key'],
+    proof: 'MCP action path, decision trace, and fail-closed auth evidence',
+    boundary: 'No self-declared agent scope can write; gateway auth is required.'
+  },
+  buyer: {
+    title: 'Buyer mandate view',
+    subtitle: 'The buyer controls whether sponsored influence is allowed.',
+    actions: ['Set spend ceiling and merchant scope', 'Opt out of sponsored offers', 'Revoke a mandate before agent action'],
+    proof: 'Mandate state and eligibility-block reasons',
+    boundary: 'Sponsored offers are machine-readable and can be excluded.'
+  },
+  verifier: {
+    title: 'Verifier proof view',
+    subtitle: 'Receipts settle only when integrity checks pass.',
+    actions: ['Verify a receipt hash', 'Reject tampered receipts', 'Open a shareable proof room'],
+    proof: 'Verifier status, receipt hash, report, and disclosure card',
+    boundary: 'Rejected or disputed receipts never release value.'
+  },
+  operator: {
+    title: 'Operator readiness view',
+    subtitle: 'Keep readiness claims tied to current evidence.',
+    actions: ['Check readiness, monitor, source bundle, and runbook', 'Confirm DUAL remains read-only', 'Keep broad Cowork gate pending until externally reviewed'],
+    proof: 'Readiness rail, source-review bundle, and production-readiness endpoint',
+    boundary: 'Partner-ready and production-ready claims stay blocked until the exact build passes the broad gate.'
+  }
+};
+
+function showRole(role) {
+  const data = ROLES[role] || ROLES.brand;
+  document.querySelectorAll('.role-tabs button').forEach((btn) => btn.classList.toggle('active', btn.id === `roleBtn-${role}`));
+  const el = document.getElementById('rolePanel');
+  if (!el) return;
+  el.innerHTML = `<span>${esc(role)}</span><b>${esc(data.title)}</b>
+    <div class="m">${esc(data.subtitle)}</div>
+    <ul>${data.actions.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>
+    <div class="summary-strip">
+      <span class="summary-pill">Proof: ${esc(data.proof)}</span>
+      <span class="summary-pill">Boundary: ${esc(data.boundary)}</span>
+    </div>`;
+}
+
 function setProofRoom(id) {
   document.getElementById('proofRoomId').value = id || '';
+  preferredProofId = id || preferredProofId;
   if (id) loadProofRoom();
 }
 
 async function refreshAll() {
-  const [offers, programs, mandates, receipts, status, prodReady] = await Promise.all([
-    get('/api/offers'), get('/api/programs'), get('/api/mandates'), get('/api/receipts'), get('/api/status'), get('/api/ops/production-readiness')
+  const [offers, programs, mandates, receipts, status, prodReady, hardeningPlan] = await Promise.all([
+    get('/api/offers'), get('/api/programs'), get('/api/mandates'), get('/api/receipts'), get('/api/status'), get('/api/ops/production-readiness'), get('/api/ops/partner-hardening')
   ]);
   document.getElementById('verBadge').textContent = 'v' + status.version;
   document.getElementById('offersWalk').innerHTML = offers.offers.map(offerHtml).join('');
@@ -1026,6 +1421,9 @@ async function refreshAll() {
       ? '<b>Claim boundary:</b> partner-ready pilot language is allowed with explicit exclusions; full production-ready remains blocked.'
       : '<b>Claim boundary:</b> partner-ready pilot language still requires the fresh broad Cowork gate; full production-ready has separate live/provider blockers.';
   out('dualStatus', d);
+  renderLifecycle(offers.offers, receipts.receipts);
+  renderProofHeroFromState(offers.offers, receipts.receipts);
+  renderReadinessRail(hardeningPlan);
 
   document.getElementById('programs').innerHTML = programs.programs.map((p) =>
     `<div class="item"><span class="t">${p.name}</span><span class="state ${p.state}">${p.state}</span>
@@ -1055,9 +1453,94 @@ async function refreshAll() {
   fillSelect('oProgram', programs.programs.map((p) => [p.id, p.name]));
 	  fillSelect('rProgram', programs.programs.map((p) => [p.id, p.name]));
 	  if (!document.getElementById('proofRoomId').value && offers.offers[0]) document.getElementById('proofRoomId').value = offers.offers[0].id;
-	  renderDashboard(await get('/api/product/brand-dashboard'));
-	  renderMarketplace(await get('/api/product/agent-marketplace'));
+  renderDashboard(await get('/api/product/brand-dashboard'));
+  renderMarketplace(await get('/api/product/agent-marketplace'));
 	}
+
+function renderLifecycle(offers = [], receipts = []) {
+  const el = document.getElementById('lifecycleRail');
+  if (!el) return;
+  const latestOffer = offers[offers.length - 1] || null;
+  const relatedReceipts = latestOffer ? receipts.filter((r) => r.offer_id === latestOffer.id) : receipts;
+  const latestReceipt = relatedReceipts[relatedReceipts.length - 1] || receipts[receipts.length - 1] || null;
+  const state = latestOffer?.state || 'draft';
+  const hasOffer = Boolean(latestOffer);
+  const hasReceipt = Boolean(latestReceipt);
+  const verified = latestReceipt?.verified === true || latestReceipt?.status === 'settled';
+  const lifecycle = [
+    { key: 'draft', label: 'Brand config', detail: latestOffer?.title || 'Offer terms, budget, category', done: hasOffer },
+    { key: 'published', label: 'Published', detail: hasOffer ? state : 'Waiting for offer', done: hasOffer },
+    { key: 'discovered', label: 'Agent visible', detail: 'MCP marketplace and eligibility path', done: ['discovered', 'reserved', 'redeemed', 'settled', 'flagged_review'].includes(state) || hasReceipt },
+    { key: 'reserved', label: 'Reserved', detail: 'Gateway key plus mandate gate', done: ['reserved', 'redeemed', 'settled', 'flagged_review'].includes(state) || hasReceipt },
+    { key: 'redeemed', label: 'Redeemed', detail: latestReceipt?.id || 'Receipt not created yet', done: hasReceipt },
+    { key: 'verified', label: verified ? 'Verified' : hasReceipt ? 'Verifier pending' : 'Verification', detail: latestReceipt?.status || 'Independent receipt check', done: verified, blocked: hasReceipt && !verified },
+    { key: 'proof', label: 'Proof room', detail: hasOffer ? `/proof/${latestOffer.id}` : 'Created with offer', done: hasOffer }
+  ];
+  el.innerHTML = lifecycle.map((step) => {
+    const cls = step.done ? 'done' : step.blocked ? 'blocked' : 'active';
+    return `<div class="lifecycle-step ${cls}"><span>${esc(step.key)}</span><b>${esc(step.label)}</b><div class="m">${esc(step.detail)}</div></div>`;
+  }).join('');
+}
+
+function renderProofHeroFromState(offers = [], receipts = []) {
+  const preferredReceipt = preferredProofId ? receipts.find((r) => r.id === preferredProofId) : null;
+  const preferredOffer = preferredProofId ? offers.find((o) => o.id === preferredProofId) : null;
+  const nonTamperOffers = offers.filter((o) => !/tamper/i.test(o.title || ''));
+  const latestVerifiedOffer = [...nonTamperOffers].reverse().find((o) => receipts.some((r) => r.offer_id === o.id && r.verified === true));
+  const defaultOffer = latestVerifiedOffer || nonTamperOffers[nonTamperOffers.length - 1] || offers[offers.length - 1];
+  const latestOffer = preferredOffer || (preferredReceipt ? offers.find((o) => o.id === preferredReceipt.offer_id) : defaultOffer);
+  const relatedReceipts = latestOffer ? receipts.filter((r) => r.offer_id === latestOffer.id) : [];
+  const latestReceipt = preferredReceipt || relatedReceipts[relatedReceipts.length - 1] || receipts[receipts.length - 1] || null;
+  if (!latestOffer && !latestReceipt) return renderProofHero(null);
+  const id = preferredProofId || latestReceipt?.id || latestOffer?.id;
+  const status = latestReceipt ? (latestReceipt.verified ? 'verified receipt' : latestReceipt.status) : latestOffer.state;
+  renderProofHero({
+    id,
+    public_url: `/proof/${encodeURIComponent(id)}`,
+    offer: latestOffer,
+    verifier: { status, verified: latestReceipt?.verified === true, value_released: latestReceipt?.verified === true && latestReceipt?.status === 'settled' },
+    report: null,
+    dual: { writeMode: 'read_only', liveDualWrites: false }
+  });
+}
+
+function renderProofHero(room) {
+  const el = document.getElementById('proofHero');
+  if (!el) return;
+  if (!room) {
+    el.innerHTML = `<div class="proof-title">No proof room yet.</div><div class="kv">Create an offer or run demo mode to generate the first proof room.</div>`;
+    return;
+  }
+  const id = room.latest_receipt?.id || room.offer?.id || room.program?.id || room.id || '';
+  const path = room.public_url?.startsWith('http') ? new URL(room.public_url).pathname : (room.public_url || `/proof/${encodeURIComponent(id)}`);
+  const verifier = room.verifier || {};
+  el.innerHTML = `<div class="proof-title">${esc(room.offer?.title || room.program?.name || 'Latest Revolv proof room')}</div>
+    <div class="summary-strip">
+      <span class="summary-pill">${esc(verifier.status || 'no_receipt_yet')}</span>
+      <span class="summary-pill">verified=${esc(Boolean(verifier.verified))}</span>
+      <span class="summary-pill">valueReleased=${esc(Boolean(verifier.value_released))}</span>
+    </div>
+    <div class="kv">DUAL write mode <b>${esc(room.dual?.writeMode || 'read_only')}</b> · liveDualWrites=<b>${esc(Boolean(room.dual?.liveDualWrites))}</b></div>
+    <a class="linkout proof-path" href="${esc(path)}" target="_blank" rel="noopener">${esc(path)}</a>`;
+}
+
+function renderReadinessRail(plan = {}) {
+  const el = document.getElementById('readinessRail');
+  if (!el) return;
+  const lanes = plan.lanes || [];
+  if (!lanes.length) {
+    el.innerHTML = '<div class="kv">Readiness plan loading...</div>';
+    return;
+  }
+  const priority = ['guided_offer_creation', 'partner_demo_mode', 'shareable_proof_room', 'brand_dashboard', 'agent_marketplace', 'reference_agent', 'custom_domain_alias', 'oidc_user_login', 'two_tenant_browser_isolation', 'fine_grained_concurrency', 'observability_alerting', 'dual_readback_mapping', 'broad_cowork_review'];
+  const ordered = priority.map((id) => lanes.find((lane) => lane.id === id)).filter(Boolean);
+  el.innerHTML = ordered.map((lane) => `<div class="readiness-lane ${esc(lane.status)}">
+    <span>${esc(lane.status)}</span>
+    <b>${esc(lane.id.replaceAll('_', ' '))}</b>
+    <div class="m">${esc(typeof lane.evidence === 'string' ? lane.evidence : JSON.stringify(lane.evidence))}</div>
+  </div>`).join('');
+}
+
 function fillSelect(id, pairs) {
   const el = document.getElementById(id);
   const cur = el.value;
@@ -1112,11 +1595,22 @@ function renderMarketplace(m) {
   const el = document.getElementById('marketplace');
   if (!el) return;
   const offers = (m.offers || []).slice(0, 8).map((o) =>
-    `<div class="item"><span class="t">${esc(o.title)}</span><span class="state ${esc(o.state)}">${esc(o.state)}</span>
-     <div class="m">${esc(o.brand_name)} · incentive ${esc(o.incentive_value)} · sponsored=${esc(o.sponsored)} · terms ${esc((o.terms_hash || '').slice(0, 18))}…</div>
-     <div class="m">MCP: ${esc((o.mcp_tools || []).join(' → '))}</div>
-     <button class="ghost" onclick="setProofRoom('${esc(o.id)}')">Proof room</button></div>`).join('');
-  el.innerHTML = `<div class="metric-grid">${metricCard('Agent-visible offers', m.count || 0)}${metricCard('Sponsored disclosure', 'machine-readable')}${metricCard('Buyer controls', (m.principal_controls || []).length)}</div>${offers || '<div class="kv">No active offers yet.</div>'}`;
+    `<article class="market-card">
+      <span>${esc(o.state)}</span>
+      <strong>${esc(o.title)}</strong>
+      <div class="summary-strip">
+        <span class="summary-pill">${esc(o.brand_name || 'Brand')}</span>
+        <span class="summary-pill">price ${esc(o.price)}</span>
+        <span class="summary-pill">incentive ${esc(o.incentive_value)}</span>
+        <span class="summary-pill">sponsored=${esc(o.sponsored)}</span>
+      </div>
+      <div class="m"><b>Buyer gate:</b> allowSponsored, spend ceiling, merchant allowlist, and scope are checked before reserve/redeem.</div>
+      <div class="m"><b>MCP path:</b> ${esc((o.mcp_tools || []).join(' -> '))}</div>
+      <div class="m"><b>Terms hash:</b> ${esc((o.terms_hash || '').slice(0, 26))}...</div>
+      <button class="ghost" onclick="setProofRoom('${esc(o.id)}')">Proof room</button>
+    </article>`).join('');
+  el.innerHTML = `<div class="metric-grid">${metricCard('Agent-visible offers', m.count || 0)}${metricCard('Sponsored disclosure', 'machine-readable')}${metricCard('Buyer controls', (m.principal_controls || []).length)}${metricCard('Impressions billed', 0)}</div>
+    <div class="market-grid">${offers || '<div class="kv">No active offers yet.</div>'}</div>`;
 }
 
 async function loadReferenceAgent() {
@@ -1153,9 +1647,26 @@ async function guidedCreateOffer() {
     terms: document.getElementById('wTerms').value
   };
   const res = await post('/api/product/create-offer-flow', body, CONSOLE_KEY);
+  renderWizardSummary(res);
   out('wizardOut', res);
-  if (res.offer?.id) document.getElementById('proofRoomId').value = res.offer.id;
+  if (res.offer?.id) {
+    preferredProofId = res.offer.id;
+    document.getElementById('proofRoomId').value = res.offer.id;
+  }
   refreshAll();
+}
+
+function renderWizardSummary(res = {}) {
+  const el = document.getElementById('wizardSummary');
+  if (!el) return;
+  if (!res.offer) {
+    el.innerHTML = '<div class="kv">Created offer, agent preview, and proof-room link appear here.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="proof-summary-card"><span>Offer</span><b>${esc(res.offer.title)}</b><div class="m">price ${esc(res.offer.price)} · incentive ${esc(res.offer.incentive_value)} · sponsored=${esc(res.offer.sponsored)}</div></div>
+    <div class="proof-summary-card"><span>Agent preview</span><b>${esc(res.agent_preview?.visible_to_agent?.brand || res.brand?.name || 'Brand')}</b><div class="m">MCP read path: ${esc((res.agent_preview?.mcp_read_path || []).join(' -> '))}</div></div>
+    <div class="proof-summary-card"><span>Proof room</span><b>${esc(res.proof_room?.path || 'proof pending')}</b><div class="m"><a class="linkout" href="${esc(res.proof_room?.path || '#')}" target="_blank" rel="noopener">Open proof room</a></div></div>`;
 }
 
 async function loadDashboard() {
@@ -1166,10 +1677,20 @@ function renderDashboard(d) {
   if (!el) return;
   const t = d.totals || {};
   const programs = (d.programs || []).slice(-5).map((p) =>
-    `<div class="item"><span class="t">${esc(p.program_id || p.name || 'Program')}</span><span class="state">${esc(p.billing_model || 'per_verified_outcome')}</span>
-     <div class="m">verified ${esc(p.verified_outcomes || 0)} · spend ${esc(p.outcome_spend || 0)} · impressions billed ${esc(p.impressions_billed || 0)}</div></div>`).join('');
-  const proofRooms = (d.proof_rooms || []).map((p) => `<a class="linkout" href="${esc(p.path)}" target="_blank" rel="noopener">${esc(p.id)}</a>`).join('');
-  el.innerHTML = `<div class="metric-grid">${metricCard('Active programs', t.active_programs || 0)}${metricCard('Offers', t.offers || 0)}${metricCard('Verified outcomes', t.verified_outcomes || 0)}${metricCard('Outcome spend', t.outcome_spend || 0)}${metricCard('Impressions billed', d.impressions_billed || 0)}${metricCard('Rejected/disputed', t.rejected_or_disputed_receipts || 0)}</div>${programs || '<div class="kv">No programs yet.</div>'}<div class="kv"><b>Proof rooms:</b> ${proofRooms || 'create an offer first'}</div>`;
+    `<article class="dashboard-card">
+      <span>${esc(p.billing_model || 'per_verified_outcome')}</span>
+      <strong>${esc(p.program_id || p.name || 'Program')}</strong>
+      <div class="summary-strip">
+        <span class="summary-pill">verified ${esc(p.verified_outcomes || 0)}</span>
+        <span class="summary-pill">spend ${esc(p.outcome_spend || 0)}</span>
+        <span class="summary-pill">impressions ${esc(p.impressions_billed || 0)}</span>
+      </div>
+      <div class="m">Escrow invariant and receipt verification decide value release; impressions are never billed.</div>
+    </article>`).join('');
+  const proofRooms = (d.proof_rooms || []).map((p) => `<li><a class="linkout" href="${esc(p.path)}" target="_blank" rel="noopener">${esc(p.id)}</a></li>`).join('');
+  el.innerHTML = `<div class="metric-grid">${metricCard('Active programs', t.active_programs || 0)}${metricCard('Offers', t.offers || 0)}${metricCard('Verified outcomes', t.verified_outcomes || 0)}${metricCard('Outcome spend', t.outcome_spend || 0)}${metricCard('Impressions billed', d.impressions_billed || 0)}${metricCard('Rejected/disputed', t.rejected_or_disputed_receipts || 0)}</div>
+    <div class="dashboard-grid">${programs || '<div class="kv">No programs yet.</div>'}</div>
+    <div class="dashboard-card" style="margin-top:10px"><span>Proof rooms</span><b>Shareable partner evidence</b><ul class="dashboard-actions-list">${proofRooms || '<li>Create an offer first.</li>'}</ul></div>`;
 }
 
 async function createProgram() {
@@ -1209,7 +1730,10 @@ async function loadProofRoom() {
     document.getElementById('proofRoomId').value = id;
   }
   if (!id) return out('proofRoomOut', 'No offer, receipt, or program id available yet.');
-  out('proofRoomOut', await get('/api/product/proof-room/' + encodeURIComponent(id)));
+  const room = await get('/api/product/proof-room/' + encodeURIComponent(id));
+  renderProofRoomSummary(room);
+  renderProofHero(room);
+  out('proofRoomOut', room);
 }
 function openProofRoom() {
   const id = document.getElementById('proofRoomId').value;
@@ -1224,9 +1748,47 @@ async function loadLatestProofRoom() {
 
 async function runPartnerDemoMode() {
   const res = await post('/api/product/partner-demo', { brandName: 'Partner Demo Brand' }, { ...CONSOLE_KEY, ...KEY });
+  renderDemoStory(res);
   out('demoOut', res);
-  if (res.hero_offer?.id) document.getElementById('proofRoomId').value = res.hero_offer.id;
+  if (res.hero_offer?.id) {
+    preferredProofId = res.hero_offer.id;
+    document.getElementById('proofRoomId').value = res.hero_offer.id;
+    await loadProofRoom();
+  }
   refreshAll();
+}
+
+function renderDemoStory(res = {}) {
+  const el = document.getElementById('demoStory');
+  if (!el) return;
+  const steps = res.steps || [];
+  if (!steps.length) {
+    el.innerHTML = '<div class="kv">Run partner demo mode to see the offer story.</div>';
+    return;
+  }
+  el.innerHTML = steps.map((step, idx) => {
+    const status = String(step.status || '');
+    const cls = status.includes('blocked') || status.includes('flagged') || status.includes('rejected') ? 'blocked' : 'done';
+    const evidence = step.evidence?.offer_id || step.evidence?.receipt_id || step.evidence?.outcome || step.evidence?.status || '';
+    return `<article class="story-card ${cls}"><span>Step ${idx + 1}</span><strong>${esc(step.label)}</strong><div class="summary-strip"><span class="summary-pill">${esc(status || 'done')}</span></div><div class="m">${esc(evidence || 'Evidence captured in raw payload.')}</div></article>`;
+  }).join('');
+}
+
+function renderProofRoomSummary(room = {}) {
+  const el = document.getElementById('proofRoomSummary');
+  if (!el) return;
+  if (room.status !== 'proof_room_ready') {
+    el.innerHTML = `<div class="kv">${esc(room.status || 'Proof room unavailable')}</div>`;
+    return;
+  }
+  const verifier = room.verifier || {};
+  const report = room.report || {};
+  const path = room.public_url?.startsWith('http') ? new URL(room.public_url).pathname : room.public_url;
+  el.innerHTML = `
+    <div class="proof-summary-card"><span>Subject</span><b>${esc(room.offer?.title || room.program?.name || room.subject)}</b><div class="m">Brand ${esc(room.brand?.name || 'n/a')} · sponsored=${esc(room.disclosure?.sponsored)}</div></div>
+    <div class="proof-summary-card"><span>Verifier</span><b>${esc(verifier.status || 'no_receipt_yet')}</b><div class="m">verified=${esc(Boolean(verifier.verified))} · valueReleased=${esc(Boolean(verifier.value_released))}</div></div>
+    <div class="proof-summary-card"><span>Brand report</span><b>${esc(report.billing_model || 'per_verified_outcome')}</b><div class="m">verified ${esc(report.verified_outcomes || 0)} · impressions ${esc(report.impressions_billed || 0)} · spend ${esc(report.outcome_spend || 0)}</div></div>
+    <div class="proof-summary-card"><span>Boundary</span><b>DUAL ${esc(room.dual?.writeMode || 'read_only')}</b><div class="m">liveDualWrites=${esc(Boolean(room.dual?.liveDualWrites))} · <a class="linkout" href="${esc(path || '#')}" target="_blank" rel="noopener">Open public page</a></div></div>`;
 }
 
 // proof tab
@@ -1254,7 +1816,13 @@ async function loadBundle() {
   out('eventsOut', { file_count: b.file_count, bundle_hash: b.bundle_hash, files: b.files.map((f) => `${f.path} ${f.sha256.slice(0, 18)}…`) });
 }
 
-(async () => { SI = await get('/api/seed-info'); refreshAll(); })();
+(async () => {
+  showRole('brand');
+  renderDemoStory();
+  renderWizardSummary();
+  SI = await get('/api/seed-info');
+  await refreshAll();
+})();
 </script>
 </div>
 </body>

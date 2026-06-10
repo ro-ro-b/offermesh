@@ -32,17 +32,17 @@ try {
   if (!up) throw new Error('server did not start');
 
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
-  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.6.0');
+  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.7.0');
 
   const tools = await rpc('tools/list');
   assert('26 tools listed', tools.result.tools.length === 26, tools.result.tools.length);
-  assert('v0.6.0 product tools present', ['get_agent_marketplace', 'get_brand_dashboard', 'get_proof_room', 'get_reference_agent_guide', 'get_partner_hardening_plan'].every((name) => tools.result.tools.some((t) => t.name === name)));
+  assert('v0.7.0 product tools present', ['get_agent_marketplace', 'get_brand_dashboard', 'get_proof_room', 'get_reference_agent_guide', 'get_partner_hardening_plan'].every((name) => tools.result.tools.some((t) => t.name === name)));
 
   const resources = await rpc('resources/list');
   assert('15 resources listed', resources.result.resources.length === 15, resources.result.resources.length);
   assert('disclosure policy resource present', resources.result.resources.some((r) => r.uri === 'revolv://disclosure-policy'));
   assert('readiness resources present', ['revolv://market-pack', 'revolv://dual-live-readback-plan', 'revolv://saas-hardening', 'revolv://production-readiness', 'revolv://public-identity', 'revolv://customer-session-drill', 'revolv://incident-runbook'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
-  assert('v0.6.0 product resources present', ['revolv://agent-marketplace', 'revolv://brand-dashboard', 'revolv://reference-agent', 'revolv://partner-hardening'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
+  assert('v0.7.0 product resources present', ['revolv://agent-marketplace', 'revolv://brand-dashboard', 'revolv://reference-agent', 'revolv://partner-hardening'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
   const policy = await rpc('resources/read', { uri: 'revolv://disclosure-policy' });
   assert('disclosure policy readable', JSON.parse(policy.result.contents[0].text).sponsored_field_required === true);
   const marketResource = await rpc('resources/read', { uri: 'revolv://market-pack' });
