@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.3.1)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.4.0)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -9,11 +9,19 @@ Built per `plans/sad-2026-06-10-smartnft-agentic-offer-exchange.md` (all 4 sprin
 ## Run
 
 ```bash
-OFFERMESH_GATEWAY_KEY=demo-gateway-key npm start   # http://127.0.0.1:4310 — UI + REST + MCP at /mcp
-npm run test:all    # check (42) + smoke (50) + MCP smoke (25) + persistence smoke (7)
+OFFERMESH_GATEWAY_KEY=demo-gateway-key npm start   # http://127.0.0.1:4310/revolv — UI + REST + MCP at /mcp
+npm run test:all    # check + smoke + MCP smoke + persistence smoke
 ```
 
 Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence).
+
+## v0.4.0 — all-six next step surface
+
+The canonical public route now works at `/revolv` as well as `/`, so Revolv can be shared from the existing public `offermesh.vercel.app` host while the repo/domain rename remains a separate decision. A `revolv-offers.vercel.app` alias was created but remains Vercel-protected under the project protection policy; do not treat it as the public URL until that protection posture is intentionally changed or a custom domain is attached.
+
+SaaS hardening now exposes a rate-limit mode contract: Upstash Redis fixed-window enforcement when Redis env is configured, local token-bucket fallback otherwise. New REST endpoints: `/api/ops/hardening`, `/api/ops/idp-contract`, `/api/ops/billing-policy`, `/api/dual/live-readback-plan`, and `/api/product/market-pack`. New MCP tools/resources mirror the same artifacts so agents can read the market pack, DUAL plan, and SaaS hardening posture directly.
+
+The old private `ro-ro-b/revolv` MVP is archived as historical. The canonical implementation is this repo: Revolv product over the OfferMesh engine.
 
 ## v0.3.1 — Revolv brand merge over the v0.3.0 SaaS layer
 
@@ -40,9 +48,9 @@ Six surfaces in one app: **Walkthrough** (90s reviewer script), **Agent** (auton
 - **Disclosure-native:** every offer carries `sponsored=true` + public incentive terms (MCP resource `revolv://disclosure-policy`; `offermesh://disclosure-policy` remains supported for compatibility).
 - **Truthful DUAL posture:** `/api/dual/status` — mainnet target, `writeMode=read_only`, `mainnetMappingPending=true`, no credentials stored, **no live DUAL writes**.
 
-## MCP surface (POST /mcp, JSON-RPC 2.0 — 14 tools)
+## MCP surface (POST /mcp, JSON-RPC 2.0 — 17 tools)
 
-`discover_offers` · `get_offer` · `check_eligibility` · `reserve_offer`* · `redeem_offer`* · `get_redemption_receipt` · `verify_receipt` · `get_dual_status` · `simulate_agent_run`* · `get_program_report` · `get_reward_epoch` · `get_proof_events` · `prepare_dual_sync` · `queue_dual_sync`* (* = auth-gated, fail closed with `agent_auth_required`).
+`discover_offers` · `get_offer` · `check_eligibility` · `reserve_offer`* · `redeem_offer`* · `get_redemption_receipt` · `verify_receipt` · `get_dual_status` · `simulate_agent_run`* · `get_program_report` · `get_reward_epoch` · `get_proof_events` · `prepare_dual_sync` · `queue_dual_sync`* · `get_revolv_market_pack` · `get_dual_live_readback_plan` · `get_saas_hardening_contract` (* = auth-gated, fail closed with `agent_auth_required`).
 
 ## DUAL sync lane (prepare → queue → execute)
 

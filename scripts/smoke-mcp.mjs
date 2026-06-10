@@ -21,7 +21,8 @@ const toolText = (resp) => JSON.parse(resp.result.content[0].text);
 
 const child = spawn(process.execPath, ['server.mjs'], {
   cwd: new URL('..', import.meta.url).pathname,
-  env: { ...process.env, PORT: String(PORT), OFFERMESH_GATEWAY_KEY: 'mcp-smoke-key', OFFERMESH_EPHEMERAL: '1', OFFERMESH_ADMIN_TOKEN: 'mcp-admin' },
+  env: { ...process.env, PORT: String(PORT), OFFERMESH_GATEWAY_KEY: 'mcp-smoke-key', OFFERMESH_EPHEMERAL: '1', OFFERMESH_ADMIN_TOKEN: 'mcp-admin',
+    KV_REST_API_URL: '', KV_REST_API_TOKEN: '', UPSTASH_REDIS_REST_URL: '', UPSTASH_REDIS_REST_TOKEN: '' },
   stdio: 'ignore'
 });
 
@@ -31,15 +32,18 @@ try {
   if (!up) throw new Error('server did not start');
 
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
-  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv');
+  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.4.0');
 
   const tools = await rpc('tools/list');
-  assert('14 tools listed', tools.result.tools.length === 14, tools.result.tools.length);
+  assert('17 tools listed', tools.result.tools.length === 17, tools.result.tools.length);
 
   const resources = await rpc('resources/list');
   assert('disclosure policy resource present', resources.result.resources.some((r) => r.uri === 'revolv://disclosure-policy'));
+  assert('v0.4.0 resources present', ['revolv://market-pack', 'revolv://dual-live-readback-plan', 'revolv://saas-hardening'].every((uri) => resources.result.resources.some((r) => r.uri === uri)));
   const policy = await rpc('resources/read', { uri: 'revolv://disclosure-policy' });
   assert('disclosure policy readable', JSON.parse(policy.result.contents[0].text).sponsored_field_required === true);
+  const marketResource = await rpc('resources/read', { uri: 'revolv://market-pack' });
+  assert('market pack resource readable', JSON.parse(marketResource.result.contents[0].text).product === 'Revolv');
 
   const discover = toolText(await rpc('tools/call', { name: 'discover_offers', arguments: {} }));
   assert('discover returns sponsored offers', discover.count >= 2 && discover.offers.every((o) => o.sponsored === true));
@@ -101,7 +105,14 @@ try {
   const q = toolText(await rpc('tools/call', { name: 'queue_dual_sync', arguments: { receipt_id: redAuth.receipt.id } }, auth));
   assert('queue_dual_sync queues verified receipt', q.status === 'queued');
 
-  // ---- v0.3.0: per-tenant gateway key works on MCP ----
+  const pack = toolText(await rpc('tools/call', { name: 'get_revolv_market_pack', arguments: {} }));
+  assert('market pack tool returns Revolv', pack.product === 'Revolv' && pack.status === 'market_pack_ready');
+  const plan = toolText(await rpc('tools/call', { name: 'get_dual_live_readback_plan', arguments: {} }));
+  assert('dual readback plan tool is planning only', plan.status === 'plan_ready_live_write_not_approved' && plan.write_gate.required === true);
+  const hardening = toolText(await rpc('tools/call', { name: 'get_saas_hardening_contract', arguments: {} }));
+  assert('hardening tool returns rate-limit posture', hardening.rate_limit_mode.mode === 'local_token_bucket');
+
+  // ---- per-tenant gateway key works on MCP ----
   const tnt = await fetch(BASE + '/api/admin/tenants', { method: 'POST', headers: { 'content-type': 'application/json', 'x-offermesh-admin-token': 'mcp-admin' }, body: JSON.stringify({ name: 'MCP Tenant' }) }).then((r) => r.json());
   const tAuth = { 'x-offermesh-gateway-key': tnt.gateway_key };
   const tSim = toolText(await rpc('tools/call', { name: 'simulate_agent_run', arguments: { mandate_id: seedInfo.no_sponsored_mandate_id, agent_id: 'agent:tenant-mcp' } }, tAuth));

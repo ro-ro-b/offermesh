@@ -104,12 +104,17 @@ const execAuthed = executeDualSync(store3, q.queue_id, { operatorTokenHeader: 'c
 assert('fully authorized execute is truthfully mapping-pending, no write', execAuthed.status === 'blocked_mapping_pending' && execAuthed.write_executed === false);
 delete process.env.OFFERMESH_OPERATOR_TOKEN;
 
-console.log('Tenancy + metering + rate limit (v0.3.0):');
+console.log('Tenancy + metering + rate limit (v0.4.0):');
 {
   const { createTenant, resolveTenantByApiKey, resolveTenantByGatewayKey, rotateTenantKeys, setTenantStatus } = await import('../lib/tenants.mjs');
   const { meter, tenantUsage, billingRecord } = await import('../lib/metering.mjs');
-  const { rateLimit } = await import('../lib/ratelimit.mjs');
-  const { monitor, readiness } = await import('../lib/ops.mjs');
+  const { rateLimit, rateLimitMode } = await import('../lib/ratelimit.mjs');
+  const { monitor, readiness, hardening } = await import('../lib/ops.mjs');
+  const { billingPolicy, dualLiveReadbackPlan, idpAccessContract, marketPack } = await import('../lib/contracts.mjs');
+  delete process.env.KV_REST_API_URL;
+  delete process.env.KV_REST_API_TOKEN;
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
   const s = createStore();
   seed(s);
   const issued = createTenant(s, { name: 'Check Co' });
@@ -133,13 +138,19 @@ console.log('Tenancy + metering + rate limit (v0.3.0):');
 
   const fakeReq = { headers: { 'x-forwarded-for': 'check-client' }, socket: {} };
   let blocked = false;
-  for (let i = 0; i < 100; i++) { if (!rateLimit(fakeReq, 'write').allowed) { blocked = true; break; } }
+  for (let i = 0; i < 100; i++) { if (!(await rateLimit(fakeReq, 'write')).allowed) { blocked = true; break; } }
   assert('rate limiter blocks after burst', blocked);
+  assert('local rate-limit mode declared', rateLimitMode().mode === 'local_token_bucket' && rateLimitMode().global === false);
 
   const mon = monitor(s);
   assert('ops monitor green on healthy store', mon.ok === true, JSON.stringify(mon.checks.filter((c) => !c.pass)));
   const rdy = readiness(s);
   assert('readiness keeps external gate pending', rdy.items.find((i) => i.id === 'external_review_gate').status === 'pending');
+  assert('hardening contract exposes fallback mode', hardening(s).rate_limit_mode.mode === 'local_token_bucket');
+  assert('IdP contract is phase-2 only', idpAccessContract().implementation_state === 'not_bound');
+  assert('billing policy excludes payment capture', billingPolicy().payment_capture === false);
+  assert('DUAL readback plan requires explicit approval', dualLiveReadbackPlan().write_gate.required === true);
+  assert('market pack is Revolv-branded', marketPack().product === 'Revolv');
 }
 
 if (failures > 0) { console.error(`\ncheck FAILED (${failures})`); process.exit(1); }

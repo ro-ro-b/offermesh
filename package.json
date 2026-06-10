@@ -1,6 +1,6 @@
 {
   "name": "revolv-offermesh",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Revolv — SmartNFT offer network powered by the OfferMesh SaaS/protocol engine. Brands mint verifiable offers; agents discover, reserve, and redeem under scoped mandates; brands pay per verified outcome. Local proof-first; no live DUAL writes.",
   "type": "module",
   "private": true,

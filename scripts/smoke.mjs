@@ -1,4 +1,4 @@
-// Full-loop REST smoke against a spawned server instance — v0.3.0 SaaS surface included.
+// Full-loop REST smoke against a spawned server instance — v0.4.0 all-six surface included.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -15,11 +15,13 @@ function assert(name, cond, extra) {
 }
 const post = (p, b, h = {}) => fetch(BASE + p, { method: 'POST', headers: { 'content-type': 'application/json', ...h }, body: JSON.stringify(b) }).then(async (r) => ({ code: r.status, body: await r.json(), headers: r.headers }));
 const get = (p, h = {}) => fetch(BASE + p, { headers: h }).then(async (r) => ({ code: r.status, body: await r.json(), headers: r.headers }));
+const getText = (p, h = {}) => fetch(BASE + p, { headers: h }).then(async (r) => ({ code: r.status, body: await r.text(), headers: r.headers }));
 
 const child = spawn(process.execPath, ['server.mjs'], {
   cwd: new URL('..', import.meta.url).pathname,
   env: {
     ...process.env, PORT: String(PORT), OFFERMESH_EPHEMERAL: '1',
+    KV_REST_API_URL: '', KV_REST_API_TOKEN: '', UPSTASH_REDIS_REST_URL: '', UPSTASH_REDIS_REST_TOKEN: '',
     OFFERMESH_GATEWAY_KEY: 'smoke-gateway-key',
     OFFERMESH_DEMO_CONSOLE_KEY: 'smoke-console-key',
     OFFERMESH_ADMIN_TOKEN: 'smoke-admin-token'
@@ -34,9 +36,11 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.3.1', status.body.version === '0.3.1', status.body.version);
+  assert('status v0.4.0', status.body.version === '0.4.0', status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
+  const revolvPage = await getText('/revolv');
+  assert('/revolv public route serves UI', revolvPage.code === 200 && revolvPage.body.includes('<h1>Revolv</h1>'));
   const dual = await get('/api/dual/status');
   assert('dual read_only, no live writes', dual.body.writeMode === 'read_only' && dual.body.liveDualWrites === false && dual.body.publicWrites === false);
   assert('dual status carries product/engine boundary', dual.body.product === 'revolv' && dual.body.engine === 'offermesh');
@@ -173,7 +177,20 @@ try {
   assert('readiness: brand merge done', ids.brand_merge === 'done');
   assert('readiness: tenancy/metering done', ids.multi_tenant_model === 'done' && ids.usage_metering === 'done');
   assert('readiness: storage pending without redis env', ids.durable_storage === 'pending');
+  assert('readiness: rate limiting partial without redis env', ids.rate_limiting === 'partial');
+  assert('readiness: contracts and packs exposed', ids.idp_contract === 'done' && ids.billing_policy === 'done' && ids.market_pack === 'done' && ids.dual_live_readback_plan === 'done');
   assert('readiness: external gate honestly pending', ids.external_review_gate === 'pending');
+
+  const hard = await get('/api/ops/hardening');
+  assert('hardening contract exposes local fallback', hard.body.rate_limit_mode.mode === 'local_token_bucket' && hard.body.controls.global_rate_limiting === 'local_token_bucket_fallback');
+  const idp = await get('/api/ops/idp-contract');
+  assert('idp contract not bound', idp.body.implementation_state === 'not_bound');
+  const billing = await get('/api/ops/billing-policy');
+  assert('billing policy excludes payment capture', billing.body.payment_capture === false);
+  const plan = await get('/api/dual/live-readback-plan');
+  assert('dual live readback plan requires approval', plan.body.write_gate.required === true && plan.body.status === 'plan_ready_live_write_not_approved');
+  const pack = await get('/api/product/market-pack');
+  assert('market pack ready and caveated', pack.body.status === 'market_pack_ready' && pack.body.product === 'Revolv' && pack.body.caveats.length >= 3);
 
   // DUAL sync lane fail-closed
   const prep = (await get('/api/dual/prepare/' + red1.body.receipt.id)).body;
