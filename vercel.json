@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/mcp", "destination": "/api/handler" },
+    { "source": "/api/(.*)", "destination": "/api/handler" }
+  ]
+}
