@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.9.0)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.10.0)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -13,13 +13,24 @@ OFFERMESH_GATEWAY_KEY=demo-gateway-key npm start   # http://127.0.0.1:4310/revol
 npm run test:all    # check + smoke + MCP smoke + persistence smoke
 ```
 
-Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE`, `OFFERMESH_ALERT_*`, and non-secret `REVOLV_BROAD_COWORK_*` review-evidence env for production/partner claim posture.
+Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE=kv_optimistic_lock`, `OFFERMESH_ALERT_*`, and non-secret `REVOLV_BROAD_COWORK_*` review-evidence env for exact-version/exact-commit production/partner claim posture.
+
+## v0.10.0 — production-readiness next-step hardening
+
+This pass implements the source-side next steps after the v0.9.0 partner-pilot review:
+
+- `/api/ops/customer-session-drill` now returns replayable two-tenant customer-session evidence, not only a checklist. The drill uses scratch state, creates two independent tenant console/gateway sessions, proves same-tenant writes, blocks cross-tenant offer mint/program mutation with 403-style evidence, and returns sanitized hashes only.
+- Upstash Redis storage can now run with `OFFERMESH_STORAGE_CONCURRENCY_MODE=kv_optimistic_lock`, which adds a Redis lock plus revision compare-and-set. That prevents silent cross-instance last-writer-wins overwrites when the env is enabled.
+- Broad Cowork evidence is now exact-build gated by version and, when Vercel exposes it, commit hash. A changed deployment cannot inherit the v0.9.0 review pass.
+- The production smoke harness now supports both pre-review and post-review partner-ready states and checks partner-hardening consistently.
+
+This makes v0.10.0 a production-hardening candidate, not a new partner-ready or production-ready claim. Fresh external Claude Cowork review is required before any v0.10.0 partner-ready, production-ready, or broad `9.8/10` wording. OIDC provider binding, external alerting, alias/custom domain, and DUAL readback mapping remain separate gates unless explicitly configured and reviewed.
 
 ## v0.9.0 — partner-pilot 9.8 candidate proof
 
 This pass adds replayable partner-pilot proof evidence over the exact v0.8.0 UI. `/api/ops/partner-pilot-proof` and MCP `get_partner_pilot_proof` run a scratch proof harness that demonstrates two-tenant hashed-key isolation, brand offer creation, agent reserve/redeem under a mandate, verifier-approved receipt release, tamper rejection, sponsored-offer opt-out, per-verified-outcome reporting, DUAL preview without writes, and payment/live-write exclusions. The proof returns sanitized evidence only and does not mutate production customer state.
 
-This makes Revolv a stronger **partner-pilot 9.8 candidate**, not an automatic 9.8 claim. Actual `9.8/10`, partner-ready, or production-ready language still requires fresh broad external Claude Cowork review on the exact deployed v0.9.0 build. Full production remains a separate gate for custom domain, OIDC login, two-browser customer sessions, fine-grained concurrency, alerting, DUAL readback mapping, and any payment/settlement path.
+External Claude Cowork returned a 9.8/10 PASS for the exact v0.9.0 bounded partner-ready scoped-pilot gate. That pass allows only the scoped v0.9.0 wording: partner-ready for scoped production pilots with exclusions for live DUAL writes, payment capture, wallet movement, public writes, provider-created accounts, and real settlement. It is not a broad production-ready, production-grade, full-SaaS, live-DUAL, payment, wallet, settlement, or broad `9.8 product` claim.
 
 ## v0.8.0 — exact supplied UI package
 
@@ -63,7 +74,7 @@ New production-readiness surfaces:
 
 OIDC support is provider-ready but not provider-created by the app: configure issuer, audience, and JWKS URL from Auth0/Clerk/WorkOS, ensure tokens include `tenant_id` and `roles`, then run the two-browser tenant isolation drill before any production-ready claim. Payment capture and live DUAL writes remain separate approval gates.
 
-Production claim boundary: v0.9.0 can be called a partner-pilot candidate only after hosted checks pass. Do not call it production-ready, partner-ready, or 9.8/10 until the exact deployed v0.9.0 commit receives a fresh broad external Cowork pass.
+Production claim boundary: v0.10.0 is a production-hardening candidate only after hosted checks pass. Do not call it production-ready, partner-ready, or 9.8/10 until the exact deployed v0.10.0 commit receives a fresh broad external Cowork pass.
 
 ## v0.4.0 — all-six next step surface
 
@@ -77,7 +88,7 @@ The old private `ro-ro-b/revolv` MVP is archived as historical. The canonical im
 
 Revolv is now the product brand. OfferMesh remains the engine name in API-key headers, MCP compatibility resource URIs, repo continuity, and implementation internals. The readiness scorecard includes `brand_merge=done` to make that boundary explicit.
 
-Multi-tenant brand workspaces with admin-issued API + gateway keys (random, shown once, stored only as sha256 hashes, constant-time compare), tenant-scoped console writes and cross-tenant isolation, suspend/resume/rotate lifecycle, per-tenant monthly usage metering with hashed billing records (per-verified-outcome model; payment processor excluded this phase), durable storage via Upstash Redis REST (whole-snapshot, last-writer-wins — disclosed), token-bucket rate limiting (per instance — disclosed), security headers (CSP/nosniff/frame-deny/HSTS), input validation, request IDs, `/api/ops/monitor` health checks, and a truthful `/api/ops/readiness` scorecard that is the ONLY readiness claim this service makes. CI runs the full suite on every push. IdP user login is phase 2; the demo workspace uses public demo keys by design.
+Multi-tenant brand workspaces with admin-issued API + gateway keys (random, shown once, stored only as sha256 hashes, constant-time compare), tenant-scoped console writes and cross-tenant isolation, suspend/resume/rotate lifecycle, per-tenant monthly usage metering with hashed billing records (per-verified-outcome model; payment processor excluded this phase), durable storage via Upstash Redis REST with optional `kv_optimistic_lock` conflict detection, token-bucket rate limiting (per instance locally, Redis-backed in production), security headers (CSP/nosniff/frame-deny/HSTS), input validation, request IDs, `/api/ops/monitor` health checks, and a truthful `/api/ops/readiness` scorecard that is the ONLY readiness claim this service makes. CI runs the full suite on every push. IdP user login is phase 2; the demo workspace uses public demo keys by design.
 
 ### SaaS surface
 
@@ -108,4 +119,4 @@ Mirrors the Proof Capsule named path: payload preview is public read-only; queue
 
 ## Boundaries / status
 
-Live demo at https://offermesh.vercel.app/revolv (repo: ro-ro-b/offermesh). No live DUAL writes, no payment processing, no PII in public state. Readiness claims live at `/api/ops/readiness`, `/api/ops/production-readiness`, and `/api/ops/partner-pilot-proof`. The v0.4.0 scoped Cowork pass is recorded, but broad production-ready/partner-ready/9.8 language remains blocked until the v0.9.0 broad review gate passes.
+Live demo at https://offermesh.vercel.app/revolv (repo: ro-ro-b/offermesh). No live DUAL writes, no payment processing, no PII in public state. Readiness claims live at `/api/ops/readiness`, `/api/ops/production-readiness`, `/api/ops/partner-pilot-proof`, and `/api/ops/customer-session-drill`. The v0.9.0 partner-ready scoped-pilot Cowork pass is recorded for that exact build; v0.10.0 needs its own exact-build review before any refreshed partner-ready, production-ready, or broad `9.8/10` language.

@@ -39,7 +39,7 @@ try {
   }
 
   const status = await get('/api/status');
-  assert('status is v0.9.0 Revolv', status.body.version === '0.9.0' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
+  assert('status is v0.10.0 Revolv', status.body.version === '0.10.0' && status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('DUAL remains read-only', status.body.dual?.writeMode === 'read_only' && status.body.dual?.liveDualWrites === false && status.body.dual?.publicWrites === false, status.body.dual);
 
   const monitor = await get('/api/ops/monitor');
@@ -48,11 +48,13 @@ try {
   const readiness = await get('/api/ops/readiness');
   const readinessItems = Object.fromEntries((readiness.body.items || []).map((i) => [i.id, i.status]));
   assert('scoped Cowork pass recorded', readinessItems.external_review_gate === 'done', readinessItems);
+  assert('two-tenant session drill recorded', readinessItems.two_tenant_session_drill === 'done', readinessItems);
   assert(expectPartnerReady ? 'broad production gate passed for partner-ready pilot' : 'broad production gate pending', expectPartnerReady ? readinessItems.broad_production_review_gate === 'done' : readinessItems.broad_production_review_gate === 'pending', readinessItems);
 
   const prod = await get('/api/ops/production-readiness');
   assert('production readiness endpoint explicit', ['production_pilot_incomplete', 'partner_ready_pilot'].includes(prod.body.state) && prod.body.production_ready_claim_allowed === false, prod.body);
   assert('partner pilot proof recorded', prod.body.items.some((i) => i.id === 'partner_pilot_proof' && i.status === 'done'), prod.body.items);
+  assert('session isolation drill recorded', prod.body.items.some((i) => i.id === 'two_tenant_browser_isolation' && i.status === 'done') && !prod.body.blockers.includes('two_tenant_browser_isolation'), prod.body.blockers);
   assert(expectPartnerReady ? 'partner-ready pilot claim allowed' : 'partner-ready pilot claim blocked before broad review', expectPartnerReady ? prod.body.partner_ready_claim_allowed === true : prod.body.partner_ready_claim_allowed === false, prod.body);
   assert(expectPartnerReady ? 'production blockers remain beyond partner claim' : 'production blockers include broad Cowork review', expectPartnerReady ? prod.body.blockers.length > 0 && !prod.body.blockers.includes('broad_production_cowork_review') : prod.body.blockers.includes('broad_production_cowork_review'), prod.body.blockers);
 
@@ -66,15 +68,17 @@ try {
   const refAgent = await get('/api/product/reference-agent');
   assert('reference agent endpoint ready', refAgent.body.status === 'reference_agent_ready' && refAgent.body.loop?.includes('discover_offers'), refAgent.body);
   const partnerHardening = await get('/api/ops/partner-hardening');
-  assert('partner hardening endpoint ready', partnerHardening.body.status === 'partner_hardening_plan_ready' && partnerHardening.body.partner_ready_claim_allowed === false && partnerHardening.body.lanes.some((lane) => lane.id === 'partner_pilot_proof' && lane.status === 'done'), partnerHardening.body);
+  assert('partner hardening endpoint ready', partnerHardening.body.status === 'partner_hardening_plan_ready' && partnerHardening.body.partner_ready_claim_allowed === expectPartnerReady && partnerHardening.body.lanes.some((lane) => lane.id === 'partner_pilot_proof' && lane.status === 'done') && partnerHardening.body.lanes.some((lane) => lane.id === 'two_tenant_browser_isolation' && lane.status === 'done'), partnerHardening.body);
   const pilotProof = await get('/api/ops/partner-pilot-proof');
   assert('partner pilot proof endpoint ready', pilotProof.body.status === 'partner_pilot_proof_ready' && pilotProof.body.summary.failed === 0 && pilotProof.body.score_state === 'external_review_required', pilotProof.body);
+  const sessionDrill = await get('/api/ops/customer-session-drill');
+  assert('customer session drill endpoint ready', sessionDrill.body.status === 'customer_session_drill_ready' && sessionDrill.body.summary.failed === 0, sessionDrill.body);
 
   const session = await get('/api/auth/session');
   assert('OIDC fails closed unless bound', [401, 403].includes(session.code), session.body);
 
   const bundle = await get('/api/source/review-bundle');
-  assert('source bundle versioned', bundle.body.service_version === '0.9.0' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
+  assert('source bundle versioned', bundle.body.service_version === '0.10.0' && bundle.body.bundle_hash?.startsWith('0x'), bundle.body);
 } catch (err) {
   failures++;
   console.error('FAIL production smoke crashed:', err.message);

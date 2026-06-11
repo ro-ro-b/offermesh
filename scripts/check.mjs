@@ -10,6 +10,7 @@ import { runAgent } from '../lib/agentSim.mjs';
 import { prepareDualPayload, queueDualSync, executeDualSync } from '../lib/dualSync.mjs';
 import { createOfferFlow, runPartnerDemo, proofRoom, brandDashboard, agentMarketplace, referenceAgentGuide, partnerHardeningPlan } from '../lib/productSurfaces.mjs';
 import { partnerPilotProof, partnerPilotProofStatus } from '../lib/pilotProof.mjs';
+import { customerSessionDrillStatus, runCustomerSessionDrill } from '../lib/sessionDrill.mjs';
 
 let failures = 0;
 function assert(name, cond) {
@@ -106,7 +107,7 @@ const execAuthed = executeDualSync(store3, q.queue_id, { operatorTokenHeader: 'c
 assert('fully authorized execute is truthfully mapping-pending, no write', execAuthed.status === 'blocked_mapping_pending' && execAuthed.write_executed === false);
 delete process.env.OFFERMESH_OPERATOR_TOKEN;
 
-console.log('Tenancy + metering + rate limit + production readiness + product surfaces (v0.9.0):');
+console.log('Tenancy + metering + rate limit + production readiness + product surfaces (v0.10.0):');
 {
   const { createTenant, resolveTenantByApiKey, resolveTenantByGatewayKey, rotateTenantKeys, setTenantStatus } = await import('../lib/tenants.mjs');
   const { meter, tenantUsage, billingRecord } = await import('../lib/metering.mjs');
@@ -114,6 +115,7 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   const { monitor, readiness, hardening } = await import('../lib/ops.mjs');
   const { billingPolicy, dualLiveReadbackPlan, idpAccessContract, marketPack } = await import('../lib/contracts.mjs');
   const { productionReadiness, publicIdentity, customerSessionDrill, incidentRunbook } = await import('../lib/production.mjs');
+  const { broadCoworkReview } = await import('../lib/version.mjs');
   const { oidcStatus, resolveOidcSession } = await import('../lib/idp.mjs');
   delete process.env.KV_REST_API_URL;
   delete process.env.KV_REST_API_TOKEN;
@@ -160,10 +162,14 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   assert('reference agent guide exposes MCP loop', guide.loop.includes('discover_offers') && guide.required_auth.live_dual_execution.includes('operator-gated'));
   const demo = runPartnerDemo(s, issued.tenant.id, { brandName: 'Check Demo' }, 'http://check.local');
   assert('partner demo completes offer loop', demo.status === 'partner_demo_completed' && demo.steps.some((step) => step.label.includes('tampered') && step.status === 'tampered_receipt_flagged_for_review'));
-  const pilotProof = partnerPilotProof({ baseUrl: 'http://check.local', version: '0.9.0' });
+  const pilotProof = partnerPilotProof({ baseUrl: 'http://check.local', version: '0.10.0' });
   assert('partner pilot proof passes every check', pilotProof.status === 'partner_pilot_proof_ready' && pilotProof.summary.passed === pilotProof.summary.total && pilotProof.evidence.proof_room.verifier.value_released === true, pilotProof.summary);
   const pilotStatus = partnerPilotProofStatus();
   assert('partner pilot proof status is reviewable', pilotStatus.ok === true && pilotStatus.evidence_hash.startsWith('0x'));
+  const sessionDrill = runCustomerSessionDrill({ version: '0.10.0' });
+  assert('customer session drill passes every check', sessionDrill.status === 'customer_session_drill_ready' && sessionDrill.summary.passed === sessionDrill.summary.total && sessionDrill.evidence.cross_tenant_denials.every((d) => d.http_status === 403), sessionDrill.summary);
+  const sessionStatus = customerSessionDrillStatus();
+  assert('customer session drill status is reviewable', sessionStatus.ok === true && sessionStatus.evidence_hash.startsWith('0x'));
 
   const fakeReq = { headers: { 'x-forwarded-for': 'check-client' }, socket: {} };
   let blocked = false;
@@ -176,6 +182,7 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   const rdy = readiness(s);
   assert('readiness records scoped Cowork pass', rdy.items.find((i) => i.id === 'external_review_gate').status === 'done');
   assert('readiness records partner pilot proof', rdy.items.find((i) => i.id === 'partner_pilot_proof').status === 'done');
+  assert('readiness records two-tenant session drill', rdy.items.find((i) => i.id === 'two_tenant_session_drill').status === 'done');
   assert('readiness keeps broad production gate pending', rdy.items.find((i) => i.id === 'broad_production_review_gate').status === 'pending');
   assert('hardening contract exposes fallback mode', hardening(s).rate_limit_mode.mode === 'local_token_bucket');
   assert('IdP contract is phase-2 only', idpAccessContract().implementation_state === 'not_bound');
@@ -189,6 +196,7 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   const prod = productionReadiness(s, mon);
   assert('production readiness blocks broad claim', prod.production_ready_claim_allowed === false && prod.blockers.includes('broad_production_cowork_review'));
   assert('production readiness records partner pilot proof', prod.items.find((i) => i.id === 'partner_pilot_proof').status === 'done');
+  assert('production readiness records two-tenant drill as done', prod.items.find((i) => i.id === 'two_tenant_browser_isolation').status === 'done' && !prod.blockers.includes('two_tenant_browser_isolation'));
   assert('partner-ready pilot claim blocked before broad review', prod.partner_ready_claim_allowed === false && prod.claim_profiles.partner_ready_pilot.blockers.includes('broad_partner_ready_cowork_review'));
   const plan = partnerHardeningPlan({ readiness: rdy, productionReadiness: prod, hardening: hardening(s), idp: idpAccessContract(), publicIdentity: publicIdentity(), monitor: mon, pilotProof: pilotStatus });
   assert('partner hardening plan shows done and pending lanes', plan.lanes.some((lane) => lane.id === 'guided_offer_creation' && lane.status === 'done') && plan.lanes.some((lane) => lane.id === 'broad_cowork_review' && lane.status === 'pending'));
@@ -196,24 +204,36 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
     status: process.env.REVOLV_BROAD_COWORK_STATUS,
     score: process.env.REVOLV_BROAD_COWORK_SCORE,
     version: process.env.REVOLV_BROAD_COWORK_VERSION,
-    claim: process.env.REVOLV_BROAD_COWORK_CLAIM
+    claim: process.env.REVOLV_BROAD_COWORK_CLAIM,
+    commit: process.env.REVOLV_BROAD_COWORK_COMMIT,
+    buildCommit: process.env.REVOLV_BUILD_COMMIT,
+    concurrency: process.env.OFFERMESH_STORAGE_CONCURRENCY_MODE
   };
   process.env.REVOLV_BROAD_COWORK_STATUS = 'passed';
   process.env.REVOLV_BROAD_COWORK_SCORE = '9.8';
-  process.env.REVOLV_BROAD_COWORK_VERSION = '0.9.0';
+  process.env.REVOLV_BROAD_COWORK_VERSION = '0.10.0';
   process.env.REVOLV_BROAD_COWORK_CLAIM = 'partner_ready_pilot';
+  process.env.OFFERMESH_STORAGE_CONCURRENCY_MODE = 'kv_optimistic_lock';
   s.remote = { kind: 'upstash_redis_rest' };
   const partnerProd = productionReadiness(s, mon);
   assert('broad review enables partner-ready pilot claim only', partnerProd.partner_ready_claim_allowed === true && partnerProd.production_ready_claim_allowed === false, partnerProd);
+  assert('optimistic Redis locking closes concurrency blocker', partnerProd.items.find((i) => i.id === 'fine_grained_concurrency').status === 'done' && !partnerProd.blockers.includes('fine_grained_concurrency'), partnerProd.blockers);
+  process.env.REVOLV_BROAD_COWORK_COMMIT = 'reviewed-commit';
+  process.env.REVOLV_BUILD_COMMIT = 'different-commit';
+  const mismatchedReview = broadCoworkReview();
+  assert('Cowork evidence is exact-commit gated when build commit is known', mismatchedReview.passed === false && mismatchedReview.commit_matches === false, mismatchedReview);
   for (const [key, val] of Object.entries(prevReviewEnv)) {
     const envKey = key === 'status' ? 'REVOLV_BROAD_COWORK_STATUS'
       : key === 'score' ? 'REVOLV_BROAD_COWORK_SCORE'
         : key === 'version' ? 'REVOLV_BROAD_COWORK_VERSION'
-          : 'REVOLV_BROAD_COWORK_CLAIM';
+          : key === 'claim' ? 'REVOLV_BROAD_COWORK_CLAIM'
+            : key === 'commit' ? 'REVOLV_BROAD_COWORK_COMMIT'
+              : key === 'buildCommit' ? 'REVOLV_BUILD_COMMIT'
+                : 'OFFERMESH_STORAGE_CONCURRENCY_MODE';
     if (val === undefined) delete process.env[envKey];
     else process.env[envKey] = val;
   }
-  assert('customer session drill requires isolation evidence', customerSessionDrill(s).required_evidence.length >= 4);
+  assert('customer session drill returns replayable isolation evidence', customerSessionDrill(s).status === 'customer_session_drill_ready' && customerSessionDrill(s).required_evidence.length >= 4);
   assert('incident runbook lists fail-closed paths', incidentRunbook().fail_closed_paths.includes('OIDC when configured'));
 }
 
