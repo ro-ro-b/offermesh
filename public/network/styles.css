@@ -571,3 +571,7 @@ button:disabled {
 .outcome-heading {
   margin-bottom:12px}
 
+
+.hero-skip { color: #d5e8dc; font-size: 12px; text-underline-offset: 4px; }
+#refresh-report { border: 1px solid #cad8ca; background: #f4f7ef; color: #284336; padding: 8px 12px; cursor: pointer; margin-bottom: 12px; }
+#observation-report, #publisher-report { font-size: 12px; line-height: 1.7; color: #607267; }

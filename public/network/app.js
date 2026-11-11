@@ -8,9 +8,9 @@
   const validPlacement = /^[a-f0-9]{64}$/i.test(campaign || '') && ['fieldnotes','arcade'].includes(publisher);
   const statePath = validPlacement ? `state?campaign=${encodeURIComponent(campaign)}&publisher=${encodeURIComponent(publisher)}` : 'state';
   if (validPlacement) {
-    document.querySelector('#publisher-intro').textContent = publisher === 'fieldnotes'
-      ? 'Fieldnotes is a place for curious discoveries and thoughtful play. Today, meet a game about listening closely.'
-      : 'Arcade is a space for playful discoveries. Today, tune in to a little puzzle game with a big atmosphere.';
+    document.querySelector('#publisher-context').textContent = publisher === 'fieldnotes'
+      ? 'FIELDNOTES PLACEMENT · OPTIONAL'
+      : 'ARCADE PLACEMENT · OPTIONAL';
   }
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -31,7 +31,7 @@
       document.getElementById('network-outcomes').hidden = !shared;
       document.getElementById('distribution-description').textContent = shared
         ? 'Share a placement link with players. Each publisher has its own context and attribution.'
-        : 'Publish a shared pilot to create separate Fieldnotes and Arcade placement links. Your private rehearsal remains available.';
+        : 'Publish a shared pilot to create separate Fieldnotes and Arcade links. Publishing switches this browser to the shared pilot.';
       if (shared) {
         for (const name of ['fieldnotes','arcade']) {
           const path = c.shareLinks?.[name];
@@ -64,7 +64,7 @@
     if (status === 'new') app.innerHTML = `<h3>Ready to listen in?</h3><p>This is a voluntary, sponsored playtest. Try the tutorial and share one structured observation to unlock your offline game.</p><button class="button" data-action="accept">I’d like to take part <span>↗</span></button><button class="secondary" data-action="decline">Skip for now</button>`;
     else if (status === 'accepted') app.innerHTML = `<div class="tag">01 / TUNE THE SIGNAL</div><h3>Find the frequency.</h3><p>A distant signal is hiding on dial <strong>5</strong>. Select a frequency to listen. Try as many as you like, then send your attempt—even if you don’t find it.</p><div class="dial" role="group" aria-label="Signal frequencies">${Array.from({length:8},(_,i)=>`<button data-dial="${i}" aria-label="Frequency ${i}" ${moves.at(-1)===i?'class="selected" aria-pressed="true"':'aria-pressed="false"'}>${i}</button>`).join('')}</div><p>${moves.length ? (moves.at(-1)===5 ? '✳ Signal found! The message is coming through clearly.' : 'Static… try another frequency, or submit this attempt.') : 'Choose a frequency to start listening.'}</p><button class="button" data-action="play" ${moves.length?'':'disabled'}>Submit my attempt <span>↗</span></button><button class="secondary" data-action="decline">Leave playtest</button>`;
     else if (status === 'played') app.innerHTML = `<div class="tag">02 / YOUR OBSERVATION</div><h3>How did it feel?</h3><p>Choose the closest fit. Candid feedback of every kind is equally eligible for the game.</p><div class="feedback"><button data-observation="clear">The tutorial was clear ↗</button><button data-observation="confusing">I found it confusing ↗</button><button data-observation="too-hard">It felt too hard ↗</button></div><button class="secondary" data-action="decline">Leave playtest</button>`;
-    else if (status === 'complete') app.innerHTML = `<div class="tag">✳ &nbsp; THANK YOU FOR PLAYING</div><h3>Good signal received.</h3><p>Your observation is in. Here’s your complete offline copy of Night Signal: a small game about listening closely and finding your way.</p><a class="button" href="${esc(new URL('reward',api).href)}">Get Night Signal <span>↗</span></a><p>Keep the downloaded file and open it in a browser to play offline.</p>`;
+    else if (status === 'complete') app.innerHTML = `<div class="tag">✳ &nbsp; THANK YOU FOR PLAYING</div><h3>Good signal received.</h3><p>Your observation is in. Here’s your complete offline copy of Night Signal: a small game about listening closely and finding your way.</p><a class="button" href="${esc(new URL('reward',api).href)}">Get Night Signal <span>↗</span></a><p>Keep the downloaded file and open it in a browser to play offline.</p><a class="text-link" href="proof.html">Keep a Dual entitlement ↗</a>`;
     else if (status === 'declined') app.innerHTML = `<div class="tag">YOUR CHOICE</div><h3>No worries at all.</h3><p>Thanks for stopping by. The field notes are yours to enjoy whenever you like.</p><a class="button" href="#field-notes">Explore field notes <span>↗</span></a>`;
     else app.innerHTML = '<h3>Experience unavailable.</h3><p>We couldn’t determine the playtest status. Please try reloading.</p>';
   }
@@ -102,6 +102,7 @@
   });
   document.getElementById('pause-control').addEventListener('click', () => request('control',{paused: !state?.campaign?.paused}));
   document.getElementById('capacity-save').addEventListener('click', () => request('control',{capacity:Number(document.getElementById('capacity-control').value)}));
+  document.getElementById('refresh-report').addEventListener('click', () => request('state'));
   document.getElementById('publish-pilot').addEventListener('click', () => request('publish',{}));
   document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
     const input = document.getElementById(button.dataset.copy);
