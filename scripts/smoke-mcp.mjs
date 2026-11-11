@@ -1,10 +1,12 @@
 import { VERSION } from '../lib/version.mjs';
 // MCP smoke — JSON-RPC over streamable HTTP, including unauthenticated fail-closed assertions.
-import { spawn } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
+import { createServer } from 'node:http';
 
-const PORT = 4398;
-const BASE = `http://127.0.0.1:${PORT}`;
+Object.assign(process.env, { OFFERMESH_GATEWAY_KEY: 'mcp-smoke-key', OFFERMESH_EPHEMERAL: '1', OFFERMESH_ADMIN_TOKEN: 'mcp-admin', KV_REST_API_URL: '', KV_REST_API_TOKEN: '', UPSTASH_REDIS_REST_URL: '', UPSTASH_REDIS_REST_TOKEN: '' });
+const { handle } = await import('../lib/app.mjs');
+const server = createServer(handle);
+await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+const BASE = `http://127.0.0.1:${server.address().port}`;
 
 let failures = 0;
 let rpcId = 0;
@@ -20,18 +22,7 @@ const rpc = (method, params = {}, headers = {}) =>
   }).then((r) => r.json());
 const toolText = (resp) => JSON.parse(resp.result.content[0].text);
 
-const child = spawn(process.execPath, ['server.mjs'], {
-  cwd: new URL('..', import.meta.url).pathname,
-  env: { ...process.env, PORT: String(PORT), OFFERMESH_GATEWAY_KEY: 'mcp-smoke-key', OFFERMESH_EPHEMERAL: '1', OFFERMESH_ADMIN_TOKEN: 'mcp-admin',
-    KV_REST_API_URL: '', KV_REST_API_TOKEN: '', UPSTASH_REDIS_REST_URL: '', UPSTASH_REDIS_REST_TOKEN: '' },
-  stdio: 'ignore'
-});
-
 try {
-  let up = false;
-  for (let i = 0; i < 40 && !up; i++) { try { await rpc('ping'); up = true; } catch { await sleep(150); } }
-  if (!up) throw new Error('server did not start');
-
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
   assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === VERSION);
 
@@ -66,6 +57,14 @@ try {
 
   // seed mandate ids via REST seed-info (same server)
   const seedInfo = await fetch(BASE + '/api/seed-info').then((r) => r.json());
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const createTestMandate = async (agentId, allowSponsored) => {
+    const response = await fetch(BASE + '/api/mandates', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({ principalRef:'principal:mcp-smoke', agentId, scope:['quote','redeem_offer','purchase'], spendCeiling:1000, merchantAllowlist:[], allowSponsored, expiresAt }) });
+    if (!response.ok) throw new Error(`test mandate setup failed: ${response.status}`);
+    return response.json();
+  };
+  seedInfo.good_mandate_id = (await createTestMandate('agent:claude-reference', true)).id;
+  seedInfo.no_sponsored_mandate_id = (await createTestMandate('agent:unsponsored', false)).id;
 
   const elig = toolText(await rpc('tools/call', { name: 'check_eligibility', arguments: { offer_id: offerId, mandate_id: seedInfo.good_mandate_id, agent_id: 'agent:claude-reference' } }));
   assert('eligibility evaluates', elig.eligible === true);
@@ -79,9 +78,10 @@ try {
   // authenticated path
   const auth = { 'x-offermesh-gateway-key': 'mcp-smoke-key' };
   const resAuth = toolText(await rpc('tools/call', { name: 'reserve_offer', arguments: { offer_id: offerId, mandate_id: seedInfo.good_mandate_id, agent_id: 'agent:claude-reference' } }, auth));
-  assert('reserve with auth ok', resAuth.status === 'reserved');
+  assert('reserve with auth ok', resAuth.status === 'reserved', resAuth);
   const redAuth = toolText(await rpc('tools/call', { name: 'redeem_offer', arguments: { offer_id: offerId, mandate_id: seedInfo.good_mandate_id, agent_id: 'agent:claude-reference', idempotency_key: 'mcp-2' } }, auth));
-  assert('redeem with auth ok', redAuth.status === 'redeemed' && redAuth.receipt.receipt_hash.startsWith('0x'));
+  assert('redeem with auth ok', redAuth.status === 'redeemed' && redAuth.receipt?.receipt_hash?.startsWith('0x'), redAuth);
+  if (!redAuth.receipt) throw new Error('authenticated redemption did not return a receipt');
   assert('receipt has no raw agent id', !JSON.stringify(redAuth.receipt).includes('agent:claude-reference'));
 
   const verify = toolText(await rpc('tools/call', { name: 'verify_receipt', arguments: { receipt_id: redAuth.receipt.id } }));
@@ -155,7 +155,7 @@ try {
   failures++;
   console.error('FAIL mcp smoke crashed:', err.message);
 } finally {
-  child.kill();
+  await new Promise((resolve) => server.close(resolve));
 }
 
 if (failures > 0) { console.error(`\nmcp smoke FAILED (${failures})`); process.exit(1); }
