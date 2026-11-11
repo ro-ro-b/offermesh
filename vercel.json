@@ -1,14 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/mcp",
-      "destination": "/api/handler"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/handler"
-    }
-  ],
   "functions": {
     "api/handler.mjs": {
       "includeFiles": "rewards/night-signal.html"
