@@ -1,90 +1,307 @@
-import assert from 'node:assert/strict';
-import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { createServer } from 'node:http';
-const dir=await mkdtemp(join(tmpdir(),'engagement-test-'));
-process.env.REVOLV_ENGAGEMENT_DIR=dir;
-process.env.OFFERMESH_EPHEMERAL='1';
-const {handle}=await import('../lib/app.mjs');
-const base='http://localhost';
-async function request(path, {cookie,body,origin=base,method=body?'POST':'GET'}={}) {
-  const { Readable } = await import('node:stream');
-  const req=Readable.from(body ? [JSON.stringify(body)] : []); req.method=method; req.url=path;
-  req.headers={host:'localhost',...(cookie?{cookie}:{}),...(body?{'content-type':'application/json',origin}: {})};
-  const headers={}; let status=200, data='';
-  const res={setHeader(k,v){headers[k.toLowerCase()]=v},writeHead(code,h){status=code;Object.assign(headers,h)},end(chunk=''){data+=chunk}};
-  await handle(req,res);
-  return {status,cookie:headers['set-cookie']?.split(';')[0],data:JSON.parse(data)};
+import assert from "node:assert/strict";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createServer } from "node:http";
+const dir = await mkdtemp(join(tmpdir(), "engagement-test-"));
+process.env.REVOLV_ENGAGEMENT_DIR = dir;
+process.env.OFFERMESH_EPHEMERAL = "1";
+const { handle } = await import("../lib/app.mjs");
+const base = "http://localhost";
+async function request(
+  path,
+  { cookie, body, origin = base, method = body ? "POST" : "GET" } = {},
+) {
+  const { Readable } = await import("node:stream");
+  const req = Readable.from(body ? [JSON.stringify(body)] : []);
+  req.method = method;
+  req.url = path;
+  req.headers = {
+    host: "localhost",
+    ...(cookie ? { cookie } : {}),
+    ...(body ? { "content-type": "application/json", origin } : {}),
+  };
+  const headers = {};
+  let status = 200,
+    data = "";
+  const res = {
+    setHeader(k, v) {
+      headers[k.toLowerCase()] = v;
+    },
+    writeHead(code, h) {
+      status = code;
+      Object.assign(headers, h);
+    },
+    end(chunk = "") {
+      data += chunk;
+    },
+  };
+  await handle(req, res);
+  return {
+    status,
+    cookie: headers["set-cookie"]?.split(";")[0],
+    data: JSON.parse(data),
+  };
 }
 try {
-  const a=await request('/api/engagement/state'), b=await request('/api/engagement/state');
-  assert.equal(a.status,200); assert.notEqual(a.cookie,b.cookie); assert.equal(a.data.mode,'rehearsal');
-  assert.equal((await request('/api/engagement/reward',{cookie:a.cookie})).status,403);
-  assert.equal((await request('/api/engagement/accept',{cookie:a.cookie,body:{},origin:'https://evil.example'})).status,403);
-  assert.equal((await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[1]}})).status,409);
-  assert.equal((await request('/api/engagement/control',{cookie:a.cookie,body:{paused:true}})).status,200);
-  assert.equal((await request('/api/engagement/accept',{cookie:a.cookie,body:{}})).data.error,'campaign_paused');
-  await request('/api/engagement/control',{cookie:a.cookie,body:{paused:false}});
-  await request('/api/engagement/control',{cookie:a.cookie,body:{capacity:1}});
-  await request('/api/engagement/accept',{cookie:a.cookie,body:{}});
-  assert.equal((await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[]}})).data.error,'dial_attempt_required');
-  assert.equal((await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[0]}})).status,200);
-  await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[1,5]}});
-  const outcomes=await Promise.all(Array.from({length:8},()=>request('/api/engagement/complete',{cookie:a.cookie,body:{observation:'clear'}})));
-  assert.ok(outcomes.every(x=>x.status===200));
-  assert.equal(new Set(outcomes.map(x=>x.data.participant.receipt.id)).size,1);
-  assert.equal(outcomes[0].data.metrics.earnedCents,100); assert.equal(outcomes[0].data.metrics.remainingCents,0);
-  assert.equal((await request('/api/engagement/complete',{cookie:a.cookie,body:{observation:'confusing'}})).data.error,'observation_conflict');
-  assert.equal((await request('/api/engagement/claim-plan',{cookie:a.cookie,body:{wallet:'0x123'}})).data.error,'claim_unverified');
-  assert.equal((await request('/api/engagement/state',{cookie:b.cookie})).data.metrics.completed,0);
-  assert.equal((await request('/api/engagement/state',{cookie:a.cookie})).data.metrics.completed,1);
-  assert.equal((await request('/api/engagement/reward',{cookie:b.cookie})).status,403);
-  const sponsor=await request('/api/engagement/state');
-  const published=await request('/api/engagement/publish',{cookie:sponsor.cookie,body:{}});
-  assert.equal(published.status,200); assert.equal(published.data.campaign.shared,true);
-  const campaignId=new URL('http://localhost'+published.data.campaign.shareLinks.fieldnotes).searchParams.get('campaign');
-  const field=`/api/engagement/placements/${campaignId}/fieldnotes`;
-  const arcade=`/api/engagement/placements/${campaignId}/arcade`;
-  const one=await request(field+'/state'), two=await request(arcade+'/state'), three=await request(field+'/state');
-  assert.equal(one.data.sponsor,undefined); assert.equal(one.data.campaign.shareLinks,undefined);
-  const own=await request(field+'/state',{cookie:sponsor.cookie});
-  assert.equal(own.data.ownPlacement,true); assert.equal(own.data.sponsor,undefined);
-  assert.equal((await request(field+'/accept',{cookie:sponsor.cookie,body:{}})).data.error,'sponsor_cannot_participate');
-  assert.equal((await request('/api/engagement/state',{cookie:sponsor.cookie})).data.campaign.shared,true);
-  await request('/api/engagement/control',{cookie:sponsor.cookie,body:{capacity:1}});
-  const race=await Promise.all([[one,field],[two,arcade]].map(([x,path])=>request(path+'/accept',{cookie:x.cookie,body:{}})));
-  assert.equal(race.filter(x=>x.status===200).length,1);
-  assert.equal(race.filter(x=>x.data.error==='budget_exhausted').length,1);
-  const winner=race[0].status===200?one:two, winnerPath=race[0].status===200?field:arcade;
-  await request(winnerPath+'/decline',{cookie:winner.cookie,body:{}});
-  assert.equal((await request(field+'/accept',{cookie:three.cookie,body:{}})).status,200);
-  await request(field+'/play',{cookie:three.cookie,body:{moves:[2]}});
-  const completions=await Promise.all(Array.from({length:4},()=>request(field+'/complete',{cookie:three.cookie,body:{observation:'confusing'}})));
-  assert.ok(completions.every(x=>x.status===200));
-  assert.equal(new Set(completions.map(x=>x.data.participant.receipt.id)).size,1);
-  const aggregate=await request('/api/engagement/state',{cookie:sponsor.cookie});
-  assert.equal(aggregate.data.sponsor.completed,1);
-  assert.equal(aggregate.data.sponsor.accepted,2);
-  assert.equal(aggregate.data.sponsor.declined,1);
-  assert.equal(aggregate.data.sponsor.observations.confusing,1);
-  assert.equal(aggregate.data.sponsor.publishers.fieldnotes.completed,1);
-  assert.equal(aggregate.data.metrics.earnedCents,100);
-  const second=await request('/api/engagement/publish',{cookie:one.cookie,body:{}});
-  assert.equal(second.status,200);
-  const otherId=new URL('http://localhost'+second.data.campaign.shareLinks.arcade).searchParams.get('campaign');
-  const other=`/api/engagement/placements/${otherId}/arcade`;
-  assert.equal((await request(other+'/accept',{cookie:three.cookie,body:{}})).status,200);
-  assert.equal((await request(field+'/state',{cookie:three.cookie})).data.participant.status,'complete');
-  assert.equal((await request(other+'/state',{cookie:three.cookie})).data.participant.status,'accepted');
-  assert.equal((await request('/api/engagement/state',{cookie:one.cookie})).data.campaign.shared,true);
-  assert.equal((await request(other+'/accept',{cookie:one.cookie,body:{}})).data.error,'sponsor_cannot_participate');
+  const a = await request("/api/engagement/state"),
+    b = await request("/api/engagement/state");
+  assert.equal(a.status, 200);
+  assert.notEqual(a.cookie, b.cookie);
+  assert.equal(a.data.mode, "rehearsal");
+  assert.equal(
+    (await request("/api/engagement/reward", { cookie: a.cookie })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await request("/api/engagement/accept", {
+        cookie: a.cookie,
+        body: {},
+        origin: "https://evil.example",
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await request("/api/engagement/play", {
+        cookie: a.cookie,
+        body: { moves: [1] },
+      })
+    ).status,
+    409,
+  );
+  assert.equal(
+    (
+      await request("/api/engagement/control", {
+        cookie: a.cookie,
+        body: { paused: true },
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (await request("/api/engagement/accept", { cookie: a.cookie, body: {} }))
+      .data.error,
+    "campaign_paused",
+  );
+  await request("/api/engagement/control", {
+    cookie: a.cookie,
+    body: { paused: false },
+  });
+  await request("/api/engagement/control", {
+    cookie: a.cookie,
+    body: { capacity: 1 },
+  });
+  await request("/api/engagement/accept", { cookie: a.cookie, body: {} });
+  assert.equal(
+    (
+      await request("/api/engagement/play", {
+        cookie: a.cookie,
+        body: { moves: [] },
+      })
+    ).data.error,
+    "dial_attempt_required",
+  );
+  assert.equal(
+    (
+      await request("/api/engagement/play", {
+        cookie: a.cookie,
+        body: { moves: [0] },
+      })
+    ).status,
+    200,
+  );
+  await request("/api/engagement/play", {
+    cookie: a.cookie,
+    body: { moves: [1, 5] },
+  });
+  const outcomes = await Promise.all(
+    Array.from({ length: 8 }, () =>
+      request("/api/engagement/complete", {
+        cookie: a.cookie,
+        body: { observation: "clear" },
+      }),
+    ),
+  );
+  assert.ok(outcomes.every((x) => x.status === 200));
+  assert.equal(
+    new Set(outcomes.map((x) => x.data.participant.receipt.id)).size,
+    1,
+  );
+  assert.equal(outcomes[0].data.metrics.earnedCents, 100);
+  assert.equal(outcomes[0].data.metrics.remainingCents, 0);
+  assert.equal(
+    (
+      await request("/api/engagement/complete", {
+        cookie: a.cookie,
+        body: { observation: "confusing" },
+      })
+    ).data.error,
+    "observation_conflict",
+  );
+  assert.equal(
+    (
+      await request("/api/engagement/claim-plan", {
+        cookie: a.cookie,
+        body: { wallet: "0x123" },
+      })
+    ).data.error,
+    "claim_unverified",
+  );
+  assert.equal(
+    (await request("/api/engagement/state", { cookie: b.cookie })).data.metrics
+      .completed,
+    0,
+  );
+  assert.equal(
+    (await request("/api/engagement/state", { cookie: a.cookie })).data.metrics
+      .completed,
+    1,
+  );
+  assert.equal(
+    (await request("/api/engagement/reward", { cookie: b.cookie })).status,
+    403,
+  );
+  const sponsor = await request("/api/engagement/state");
+  const published = await request("/api/engagement/publish", {
+    cookie: sponsor.cookie,
+    body: {},
+  });
+  assert.equal(published.status, 200);
+  assert.equal(published.data.campaign.shared, true);
+  const campaignId = new URL(
+    "http://localhost" + published.data.campaign.shareLinks.fieldnotes,
+  ).searchParams.get("campaign");
+  const field = `/api/engagement/placements/${campaignId}/fieldnotes`;
+  const arcade = `/api/engagement/placements/${campaignId}/arcade`;
+  const one = await request(field + "/state"),
+    two = await request(arcade + "/state"),
+    three = await request(field + "/state");
+  assert.equal(one.data.sponsor, undefined);
+  assert.equal(one.data.campaign.shareLinks, undefined);
+  const own = await request(field + "/state", { cookie: sponsor.cookie });
+  assert.equal(own.data.ownPlacement, true);
+  assert.equal(own.data.sponsor, undefined);
+  assert.equal(
+    (await request(field + "/accept", { cookie: sponsor.cookie, body: {} }))
+      .data.error,
+    "sponsor_cannot_participate",
+  );
+  assert.equal(
+    (await request("/api/engagement/state", { cookie: sponsor.cookie })).data
+      .campaign.shared,
+    true,
+  );
+  await request("/api/engagement/control", {
+    cookie: sponsor.cookie,
+    body: { capacity: 1 },
+  });
+  const race = await Promise.all(
+    [
+      [one, field],
+      [two, arcade],
+    ].map(([x, path]) =>
+      request(path + "/accept", { cookie: x.cookie, body: {} }),
+    ),
+  );
+  assert.equal(race.filter((x) => x.status === 200).length, 1);
+  assert.equal(
+    race.filter((x) => x.data.error === "budget_exhausted").length,
+    1,
+  );
+  const winner = race[0].status === 200 ? one : two,
+    winnerPath = race[0].status === 200 ? field : arcade;
+  await request(winnerPath + "/decline", { cookie: winner.cookie, body: {} });
+  assert.equal(
+    (await request(field + "/accept", { cookie: three.cookie, body: {} }))
+      .status,
+    200,
+  );
+  await request(field + "/play", {
+    cookie: three.cookie,
+    body: { moves: [2] },
+  });
+  const completions = await Promise.all(
+    Array.from({ length: 4 }, () =>
+      request(field + "/complete", {
+        cookie: three.cookie,
+        body: { observation: "confusing" },
+      }),
+    ),
+  );
+  assert.ok(completions.every((x) => x.status === 200));
+  assert.equal(
+    new Set(completions.map((x) => x.data.participant.receipt.id)).size,
+    1,
+  );
+  const aggregate = await request("/api/engagement/state", {
+    cookie: sponsor.cookie,
+  });
+  assert.equal(aggregate.data.sponsor.completed, 1);
+  assert.equal(aggregate.data.sponsor.accepted, 2);
+  assert.equal(aggregate.data.sponsor.declined, 1);
+  assert.equal(aggregate.data.sponsor.observations.confusing, 1);
+  assert.equal(aggregate.data.sponsor.publishers.fieldnotes.completed, 1);
+  assert.equal(aggregate.data.metrics.earnedCents, 100);
+  const second = await request("/api/engagement/publish", {
+    cookie: one.cookie,
+    body: {},
+  });
+  assert.equal(second.status, 200);
+  const otherId = new URL(
+    "http://localhost" + second.data.campaign.shareLinks.arcade,
+  ).searchParams.get("campaign");
+  const other = `/api/engagement/placements/${otherId}/arcade`;
+  assert.equal(
+    (await request(other + "/accept", { cookie: three.cookie, body: {} }))
+      .status,
+    200,
+  );
+  assert.equal(
+    (await request(field + "/state", { cookie: three.cookie })).data.participant
+      .status,
+    "complete",
+  );
+  assert.equal(
+    (await request(other + "/state", { cookie: three.cookie })).data.participant
+      .status,
+    "accepted",
+  );
+  assert.equal(
+    (await request("/api/engagement/state", { cookie: one.cookie })).data
+      .campaign.shared,
+    true,
+  );
+  assert.equal(
+    (await request(other + "/accept", { cookie: one.cookie, body: {} })).data
+      .error,
+    "sponsor_cannot_participate",
+  );
   // A participant revisiting another placement cannot change first-accept attribution.
-  assert.equal((await request(`/api/engagement/placements/${otherId}/fieldnotes/state`,{cookie:three.cookie})).data.participant.status,'accepted');
-  await request(`/api/engagement/placements/${otherId}/fieldnotes/play`,{cookie:three.cookie,body:{moves:[0]}});
-  await request(`/api/engagement/placements/${otherId}/fieldnotes/complete`,{cookie:three.cookie,body:{observation:'clear'}});
-  const otherAggregate=await request('/api/engagement/state',{cookie:one.cookie});
-  assert.equal(otherAggregate.data.sponsor.publishers.arcade.completed,1);
-  assert.equal(otherAggregate.data.sponsor.publishers.fieldnotes.completed,0);
-  console.log('engagement checks passed');
-} finally { await rm(dir,{recursive:true,force:true}); }
+  assert.equal(
+    (
+      await request(`/api/engagement/placements/${otherId}/fieldnotes/state`, {
+        cookie: three.cookie,
+      })
+    ).data.participant.status,
+    "accepted",
+  );
+  await request(`/api/engagement/placements/${otherId}/fieldnotes/play`, {
+    cookie: three.cookie,
+    body: { moves: [0] },
+  });
+  await request(`/api/engagement/placements/${otherId}/fieldnotes/complete`, {
+    cookie: three.cookie,
+    body: { observation: "clear" },
+  });
+  const otherAggregate = await request("/api/engagement/state", {
+    cookie: one.cookie,
+  });
+  assert.equal(otherAggregate.data.sponsor.publishers.arcade.completed, 1);
+  assert.equal(otherAggregate.data.sponsor.publishers.fieldnotes.completed, 0);
+  console.log("engagement checks passed");
+} finally {
+  await rm(dir, { recursive: true, force: true });
+}

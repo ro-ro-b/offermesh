@@ -1,3 +1,4 @@
+import { VERSION } from '../lib/version.mjs';
 // MCP smoke — JSON-RPC over streamable HTTP, including unauthenticated fail-closed assertions.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -32,7 +33,7 @@ try {
   if (!up) throw new Error('server did not start');
 
   const init = await rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'smoke', version: '0' } });
-  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === '0.10.0');
+  assert('initialize ok', init.result.serverInfo.name === 'revolv-offermesh-agent-gateway' && init.result.serverInfo.product === 'revolv' && init.result.serverInfo.version === VERSION);
 
   const tools = await rpc('tools/list');
   assert('27 tools listed', tools.result.tools.length === 27, tools.result.tools.length);

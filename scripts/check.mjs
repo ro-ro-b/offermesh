@@ -1,3 +1,4 @@
+import { VERSION } from '../lib/version.mjs';
 // Syntax + unit-level checks (no server). Exits non-zero on failure.
 import { transition, canTransition, FsmError } from '../lib/fsm.mjs';
 import { createStore } from '../lib/store.mjs';
@@ -211,7 +212,7 @@ console.log('Tenancy + metering + rate limit + production readiness + product su
   };
   process.env.REVOLV_BROAD_COWORK_STATUS = 'passed';
   process.env.REVOLV_BROAD_COWORK_SCORE = '9.8';
-  process.env.REVOLV_BROAD_COWORK_VERSION = '0.10.0';
+  process.env.REVOLV_BROAD_COWORK_VERSION = VERSION;
   process.env.REVOLV_BROAD_COWORK_CLAIM = 'partner_ready_pilot';
   process.env.OFFERMESH_STORAGE_CONCURRENCY_MODE = 'kv_optimistic_lock';
   s.remote = { kind: 'upstash_redis_rest' };

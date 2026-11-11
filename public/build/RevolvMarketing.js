@@ -51,7 +51,7 @@ function RvNav({
     onClick: () => onJump("loop")
   }, "How it works"), /*#__PURE__*/React.createElement("a", {
     onClick: () => onJump("story")
-  }, "Why Revolv"), /*#__PURE__*/React.createElement("a", {
+  }, "Why Revolv"), /*#__PURE__*/React.createElement("a", {href: "/network/index.html"}, "Playtest network"), /*#__PURE__*/React.createElement("a", {
     onClick: () => onJump("console")
   }, "Try it")), /*#__PURE__*/React.createElement("div", {
     className: "actions"

@@ -1,3 +1,4 @@
+import { VERSION } from '../lib/version.mjs';
 // Full-loop REST smoke against a spawned server instance — v0.10.0 hardening proof included.
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -36,7 +37,7 @@ try {
 
   // truthful posture + service status
   const status = await get('/api/status');
-  assert('status v0.10.0', status.body.version === '0.10.0', status.body.version);
+  assert('status matches release', status.body.version === VERSION, status.body.version);
   assert('product is Revolv with OfferMesh engine', status.body.product === 'revolv' && status.body.engine === 'offermesh', status.body);
   assert('gates configured', status.body.gate.admin_token_configured === true && status.body.gate.operator_token_configured === false);
   const revolvPage = await getText('/revolv');

@@ -29,6 +29,7 @@ function RvNav({ onJump }) {
       <div className="links">
         <a onClick={() => onJump("loop")}>How it works</a>
         <a onClick={() => onJump("story")}>Why Revolv</a>
+        <a href="/network/index.html">Playtest network</a>
         <a onClick={() => onJump("console")}>Try it</a>
       </div>
       <div className="actions">

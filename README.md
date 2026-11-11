@@ -1,4 +1,4 @@
-# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.10.0)
+# Revolv — SmartNFT Offer Network (OfferMesh engine, v0.11.0)
 
 Revolv is the market-facing SmartNFT offer network replacing adverts in agent-mediated commerce. Brands mint verifiable, incentive-carrying offer tokens with escrowed budgets; AI agents discover, evaluate, reserve, and redeem them under scoped mandates (Agent Mandates pattern); an independent verifier issues proof receipts; brands pay **per verified outcome**, not per impression.
 
@@ -14,6 +14,20 @@ npm run test:all    # check + smoke + MCP smoke + persistence smoke
 ```
 
 Optional env: `OFFERMESH_ADMIN_TOKEN` (admin plane; fail-closed when unset), `OFFERMESH_DEMO_CONSOLE_KEY` (demo workspace console key), `KV_REST_API_URL`/`KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` (Upstash Redis durable storage), `OFFERMESH_OPERATOR_TOKEN` (enables the operator step of the DUAL sync lane — still mapping-pending, never writes), `OFFERMESH_STATE_PATH` (persistence location, default `data/state.json`), `OFFERMESH_EPHEMERAL=1` (no persistence), `REVOLV_PUBLIC_URL`, `REVOLV_ALIAS_PUBLIC=1`, `OFFERMESH_OIDC_ISSUER`, `OFFERMESH_OIDC_AUDIENCE`, `OFFERMESH_OIDC_JWKS_URL`, `OFFERMESH_STORAGE_CONCURRENCY_MODE=kv_optimistic_lock`, `OFFERMESH_ALERT_*`, and non-secret `REVOLV_BROAD_COWORK_*` review-evidence env for exact-version/exact-commit production/partner claim posture.
+
+## Sponsored playtest network
+
+Open **/network/index.html** to try Night Signal or publish its pilot from the advertiser dashboard. Fallow Games, Fieldnotes and Arcade are demonstration brands. A publisher gets a link it can place in an article or an assistant response. Its editorial stays accessible when someone skips the sponsor. After an attempted puzzle and a structured observation, the participant can download the full four-level game. The dashboard attributes completions to the publisher where the person accepted. The A$1 fee models research spend per completed browser session. There is no billing integration or quality adjudication.
+
+The game plays offline. The optional Dual entitlement binds the game fingerprint, personal-use terms, an opaque completion commitment and a recipient wallet. The public page reads the actual issuer template. Each wallet claim is prepared by the participant, minted by the issuer on its own machine and checked using the original completed action, object, holder and creation history. The portable receipt can be opened independently of the participant’s browser session.
+
+A shared pilot needs the existing Upstash/Redis connection in hosted environments. Local development uses files. Participants have an hour to finish a reserved place. Browser sessions and pilot data expire with inactivity after 24 hours. Clearing a cookie creates a different browser participant; unique-person authentication and commercial fraud review would be needed for paid research. Counts from this pilot cannot measure incrementality on their own.
+
+### Issuing a requested game entitlement
+
+An eligible participant can choose **Keep a Dual entitlement**, confirm a public wallet address and give the private request code to the issuer. The issuer runs a single worker on a persistent machine using its scoped Dual service credential. Set `DUAL_MAINNET_API_KEY_FILE` to an owner-readable JSON file with a `secret` property. Use one private journal directory for this issuer across all requests. The signed-in account must own the exact template. On macOS, Node 24 can use the system certificate store with `NODE_USE_SYSTEM_CA=1`.
+
+Run `node scripts/issue-engagement.mjs --origin https://offermesh.vercel.app --max-fee-wei <approved-quote-limit> --journal-dir <private-persistent-directory>` and provide the request code on standard input. The fee check compares the current quotation before dispatch. The provider determines the actual fee. The issuer should return the original object and action IDs to the participant, who can verify them on the entitlement page. Pending or interrupted requests require reconciliation of the first submission. Do not reissue from a different journal or host. No issuer credential belongs on the public web server.
 
 ## v0.10.0 — production-readiness next-step hardening
 

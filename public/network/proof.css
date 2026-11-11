@@ -1,0 +1,71 @@
+.record {
+  max-width: 850px;
+  margin: auto;
+  padding: 65px clamp(20px, 6vw, 70px) 100px;
+}
+.record h1 {
+  margin: 15px 0 20px;
+  font-size: clamp(48px, 7vw, 75px);
+}
+.record h1 em {
+  color: #466444;
+}
+.record h2 {
+  font-size: 32px;
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+.record h3 {
+  font-size: 20px;
+}
+.record .intro {
+  font-size: 19px;
+}
+.record p {
+  line-height: 1.6;
+}
+.record section {
+  margin-top: 32px;
+  padding: 27px;
+  border: 1px solid #bdc8b8;
+  border-radius: 6px;
+  background: #fffdf7;
+}
+.record form,
+.record details {
+  margin-top: 20px;
+}
+.record label {
+  display: block;
+  font-weight: 600;
+  margin: 12px 0 5px;
+}
+.record input {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  font: inherit;
+  border: 1px solid #86958b;
+  border-radius: 3px;
+}
+.record input:focus-visible {
+  outline: 3px solid #527552;
+}
+.record button {
+  margin: 12px 0;
+}
+.record code,
+.record #receipt,
+.record #public-status {
+  overflow-wrap: anywhere;
+}
+.record code {
+  display: block;
+  margin: 15px 0;
+}
+.record [hidden] {
+  display: none;
+}
+.record [role="alert"] {
+  color: #823223;
+}
