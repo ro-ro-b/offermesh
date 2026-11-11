@@ -1,9 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;
-  500;
-  600;
-  700&family=DM+Serif+Display:ital@0;
-  1&display=swap');
-  
 :root {
   --ink:#14232b;
   --cream:#f4f1e7;
@@ -575,3 +569,7 @@ button:disabled {
 .hero-skip { color: #d5e8dc; font-size: 12px; text-underline-offset: 4px; }
 #refresh-report { border: 1px solid #cad8ca; background: #f4f7ef; color: #284336; padding: 8px 12px; cursor: pointer; margin-bottom: 12px; }
 #observation-report, #publisher-report { font-size: 12px; line-height: 1.7; color: #607267; }
+
+.publisher-fieldnotes .editorial { background:#f4f1e7; }
+.publisher-arcade .editorial { background:#d8e6c8; }
+.publisher-arcade .note-grid article { background:#f8f8f0; border:0; padding:24px; }

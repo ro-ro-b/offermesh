@@ -6,11 +6,24 @@
   const campaign = urlParams.get('campaign');
   const publisher = urlParams.get('publisher');
   const validPlacement = /^[a-f0-9]{64}$/i.test(campaign || '') && ['fieldnotes','arcade'].includes(publisher);
-  const statePath = validPlacement ? `state?campaign=${encodeURIComponent(campaign)}&publisher=${encodeURIComponent(publisher)}` : 'state';
+  const participantApi = validPlacement
+    ? new URL(`placements/${campaign}/${publisher}/`, api)
+    : api;
+  const proofUrl = validPlacement
+    ? `proof.html?campaign=${encodeURIComponent(campaign)}&publisher=${encodeURIComponent(publisher)}`
+    : 'proof.html';
+  const statePath = 'state';
   if (validPlacement) {
+    document.body.classList.add(`publisher-${publisher}`);
     document.querySelector('#publisher-context').textContent = publisher === 'fieldnotes'
-      ? 'FIELDNOTES PLACEMENT · OPTIONAL'
-      : 'ARCADE PLACEMENT · OPTIONAL';
+      ? 'FIELDNOTES · SPONSORED PLACEMENT · OPTIONAL'
+      : 'ARCADE · SPONSORED PLACEMENT · OPTIONAL';
+    const editorial = document.querySelector('#field-notes');
+    if (publisher === 'fieldnotes') {
+      editorial.innerHTML = `<div><div class="eyebrow dark">FIELDNOTES / EDITORIAL</div><h2>How to test a <em>tutorial.</em></h2><p>Independent advice: a useful tutorial helps you act before it explains everything. Notice where you first feel lost.</p></div><div class="note-grid"><article><h3>Start without a guide.</h3><p>Try the first action on your own. If you pause, ask what information you were missing.</p></article><article><h3>Describe the moment.</h3><p>“I could not tell what to press” is more useful than simply saying a game is bad.</p></article><article><h3>Keep your own view.</h3><p>A clear tutorial and an enjoyable game are different things. Both deserve honest feedback.</p></article></div>`;
+    } else {
+      editorial.innerHTML = `<div><div class="eyebrow dark">ARCADE / PUZZLE LIST</div><h2>Three ways to <em>play with clues.</em></h2><p>Our independent puzzle picks: patterns, deduction and listening. Try this free clue right here: what comes next, 2, 4, 6?</p><p><strong>Answer: 8.</strong> Each number increases by two.</p></div><div class="note-grid"><article><h3>Pattern puzzles</h3><p>Look for a repeated change. Check the rule against every number before guessing.</p></article><article><h3>Deduction puzzles</h3><p>Cross out what cannot be true; the remaining possibilities become easier to test.</p></article><article><h3>Audio puzzles</h3><p>Listen for a change in pitch, rhythm or texture. Repeat the signal if you need to.</p></article></div>`;
+    }
   }
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -61,17 +74,30 @@
   }
   function render() {
     const status = state.participant?.status;
+    if (state.ownPlacement) {
+      app.innerHTML = `<h3>Publisher preview</h3><p>You are viewing your own placement. This preview is read-only; share the publisher link with a different participant to collect feedback.</p><a class="text-link" href="#field-notes">Explore the independent editorial ↗</a>`;
+      return;
+    }
+    if (state.campaign?.shared && state.sponsor && !validPlacement) {
+      app.innerHTML = `<h3>Your pilot is published.</h3><p>Use the advertiser dashboard to copy a Fieldnotes or Arcade placement link. Open a link to preview its editorial and sponsored invitation.</p><a class="button" href="#campaign">View placement links ↗</a>`;
+      return;
+    }
+    if (status === 'new' && state.campaign?.paused) {
+      app.innerHTML = `<h3>Playtest paused</h3><p>Fallow Games is not accepting new participants right now. The independent editorial is still yours to explore.</p><a class="text-link" href="#field-notes">Read the editorial ↗</a>`;
+      return;
+    }
     if (status === 'new') app.innerHTML = `<h3>Ready to listen in?</h3><p>This is a voluntary, sponsored playtest. Try the tutorial and share one structured observation to unlock your offline game.</p><button class="button" data-action="accept">I’d like to take part <span>↗</span></button><button class="secondary" data-action="decline">Skip for now</button>`;
-    else if (status === 'accepted') app.innerHTML = `<div class="tag">01 / TUNE THE SIGNAL</div><h3>Find the frequency.</h3><p>A distant signal is hiding on dial <strong>5</strong>. Select a frequency to listen. Try as many as you like, then send your attempt—even if you don’t find it.</p><div class="dial" role="group" aria-label="Signal frequencies">${Array.from({length:8},(_,i)=>`<button data-dial="${i}" aria-label="Frequency ${i}" ${moves.at(-1)===i?'class="selected" aria-pressed="true"':'aria-pressed="false"'}>${i}</button>`).join('')}</div><p>${moves.length ? (moves.at(-1)===5 ? '✳ Signal found! The message is coming through clearly.' : 'Static… try another frequency, or submit this attempt.') : 'Choose a frequency to start listening.'}</p><button class="button" data-action="play" ${moves.length?'':'disabled'}>Submit my attempt <span>↗</span></button><button class="secondary" data-action="decline">Leave playtest</button>`;
-    else if (status === 'played') app.innerHTML = `<div class="tag">02 / YOUR OBSERVATION</div><h3>How did it feel?</h3><p>Choose the closest fit. Candid feedback of every kind is equally eligible for the game.</p><div class="feedback"><button data-observation="clear">The tutorial was clear ↗</button><button data-observation="confusing">I found it confusing ↗</button><button data-observation="too-hard">It felt too hard ↗</button></div><button class="secondary" data-action="decline">Leave playtest</button>`;
-    else if (status === 'complete') app.innerHTML = `<div class="tag">✳ &nbsp; THANK YOU FOR PLAYING</div><h3>Good signal received.</h3><p>Your observation is in. Here’s your complete offline copy of Night Signal: a small game about listening closely and finding your way.</p><a class="button" href="${esc(new URL('reward',api).href)}">Get Night Signal <span>↗</span></a><p>Keep the downloaded file and open it in a browser to play offline.</p><a class="text-link" href="proof.html">Keep a Dual entitlement ↗</a>`;
+    else if (status === 'accepted') app.innerHTML = `<div class="tag">TUNE THE SIGNAL</div><h3>Find the frequency.</h3><p>A distant signal is hiding on dial <strong>5</strong>. Select a frequency to listen. Try as many as you like, then send your attempt—even if you don’t find it.</p><div class="dial" role="group" aria-label="Signal frequencies">${Array.from({length:8},(_,i)=>`<button data-dial="${i}" aria-label="Frequency ${i}" ${moves.at(-1)===i?'class="selected" aria-pressed="true"':'aria-pressed="false"'}>${i}</button>`).join('')}</div><p>${moves.length ? (moves.at(-1)===5 ? '✳ Signal found! The message is coming through clearly.' : 'Static… try another frequency, or submit this attempt.') : 'Choose a frequency to start listening.'}</p><button class="button" data-action="play" ${moves.length?'':'disabled'}>Submit my attempt <span>↗</span></button><button class="secondary" data-action="decline">Leave playtest</button>`;
+    else if (status === 'played') app.innerHTML = `<div class="tag">YOUR OBSERVATION</div><h3>How did it feel?</h3><p>Choose the closest fit. Candid feedback of every kind is equally eligible for the game.</p><div class="feedback"><button data-observation="clear">The tutorial was clear ↗</button><button data-observation="confusing">I found it confusing ↗</button><button data-observation="too-hard">It felt too hard ↗</button></div><button class="secondary" data-action="decline">Leave playtest</button>`;
+    else if (status === 'complete') app.innerHTML = `<div class="tag">✳ &nbsp; THANK YOU FOR PLAYING</div><h3>Good signal received.</h3><p>Your observation is in. Here’s your complete offline copy of Night Signal: a small game about listening closely and finding your way.</p><a class="button" href="${esc(new URL('reward',participantApi).href)}">Get Night Signal <span>↗</span></a><p>Keep the downloaded file and open it in a browser to play offline.</p><a class="text-link" href="${esc(proofUrl)}">Keep a Dual entitlement ↗</a>`;
     else if (status === 'declined') app.innerHTML = `<div class="tag">YOUR CHOICE</div><h3>No worries at all.</h3><p>Thanks for stopping by. The field notes are yours to enjoy whenever you like.</p><a class="button" href="#field-notes">Explore field notes <span>↗</span></a>`;
     else app.innerHTML = '<h3>Experience unavailable.</h3><p>We couldn’t determine the playtest status. Please try reloading.</p>';
   }
   async function request(path, body) {
     if (busy) return; busy = true;
     try {
-      const response = await fetch(new URL(path, api), body === undefined ? {credentials:'same-origin'} : {method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const base = ['control','publish'].includes(path) ? api : participantApi;
+      const response = await fetch(new URL(path, base), body === undefined ? {credentials:'same-origin'} : {method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'The request could not be completed.');
       update(data);
@@ -82,7 +108,8 @@
     } catch (error) {
       const destination = ['control','publish'].includes(path) ? document.getElementById('control-message') : app;
       const old = destination.querySelector('.error'); if (old) old.remove();
-      const msg = document.createElement('p'); msg.className='error'; msg.setAttribute('role','alert'); msg.textContent = error.message || 'Connection unavailable. Please try again.'; destination.append(msg);
+      const msg = document.createElement('p'); msg.className='error'; msg.setAttribute('role','alert'); const message = error.message || '';
+      msg.textContent = /capacity|full/i.test(message) ? 'This playtest is full. Please enjoy the independent editorial.' : /paused|closed/i.test(message) ? 'This playtest is currently closed to new participants.' : message || 'Connection unavailable. Please try again.'; destination.append(msg);
     } finally { busy=false; }
   }
   app.addEventListener('click', e => {
