@@ -2,6 +2,17 @@
   const app = document.querySelector('#app');
   const api = new URL('../api/engagement/', location.href);
   let state, moves = [], busy = false;
+  const urlParams = new URLSearchParams(location.search);
+  const campaign = urlParams.get('campaign');
+  const publisher = urlParams.get('publisher');
+  const validPlacement = /^[a-f0-9]{64}$/i.test(campaign || '') && ['fieldnotes','arcade'].includes(publisher);
+  const statePath = validPlacement ? `state?campaign=${encodeURIComponent(campaign)}&publisher=${encodeURIComponent(publisher)}` : 'state';
+  if (validPlacement) {
+    document.querySelector('#publisher-intro').textContent = publisher === 'fieldnotes'
+      ? 'Fieldnotes is a place for curious discoveries and thoughtful play. Today, meet a game about listening closely.'
+      : 'Arcade is a space for playful discoveries. Today, tune in to a little puzzle game with a big atmosphere.';
+  }
+
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const money = cents => Number.isFinite(Number(cents)) ? new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(Number(cents)/100) : '—';
   const set = (id, value) => { document.getElementById(id).textContent = value; };
@@ -10,6 +21,35 @@
     const c = s.campaign || {}, m = s.metrics || {}, p = s.proof || {};
     const mode = s.mode === 'dual' ? 'DUAL CONNECTED' : 'LOCAL REHEARSAL';
     set('mode',mode); set('dash-mode',mode);
+    const sponsor = s.sponsor;
+    document.getElementById('campaign').hidden = Boolean(c.shared && !sponsor);
+    document.querySelector('a[href="#campaign"]').hidden = Boolean(c.shared && !sponsor);
+    if (sponsor || !c.shared) {
+      const shared = Boolean(c.shared);
+      document.getElementById('publish-pilot').hidden = shared;
+      document.getElementById('placement-links').hidden = !shared;
+      document.getElementById('network-outcomes').hidden = !shared;
+      document.getElementById('distribution-description').textContent = shared
+        ? 'Share a placement link with players. Each publisher has its own context and attribution.'
+        : 'Publish a shared pilot to create separate Fieldnotes and Arcade placement links. Your private rehearsal remains available.';
+      if (shared) {
+        for (const name of ['fieldnotes','arcade']) {
+          const path = c.shareLinks?.[name];
+          // Only display same-origin placement URLs returned by the campaign service.
+          const link = path ? new URL(path, location.origin) : null;
+          document.getElementById(`${name}-link`).value = link?.origin === location.origin ? link.href : '';
+        }
+        const o = sponsor?.observations || {};
+        document.getElementById('observation-report').textContent = `Across players: ${sponsor?.accepted ?? 0} opted in · ${sponsor?.completed ?? 0} completed. Observations: clear ${o.clear ?? 0} · confusing ${o.confusing ?? 0} · too hard ${o['too-hard'] ?? 0}`;
+        const publishers = sponsor?.publishers || {};
+        document.getElementById('publisher-report').textContent = ['fieldnotes','arcade'].map(name => {
+          const p = publishers[name] || {};
+          const conversion = typeof p.conversion === 'number' ? `, ${Math.round(p.conversion * 100)}% completed` : '';
+          return `${name === 'fieldnotes' ? 'Fieldnotes' : 'Arcade'}: ${p.accepted ?? 0} opted in, ${p.completed ?? 0} completed${conversion}`;
+        }).join(' · ');
+      }
+    }
+
     set('budget',money(m.budgetCents ?? c.budgetCents)); set('fee',money(c.feeCents)); set('remaining',money(m.remainingCents)); set('earned',money(m.earnedCents));
     set('accepted',m.accepted ?? '—'); set('completed',m.completed ?? '—');
     document.getElementById('pause-control').textContent = c.paused ? 'Resume campaign' : 'Pause campaign';
@@ -35,14 +75,25 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'The request could not be completed.');
       update(data);
+      if (body !== undefined && !['control','publish'].includes(path)) {
+        const heading = app.querySelector('h3');
+        if (heading) { heading.tabIndex = -1; heading.focus(); }
+      }
     } catch (error) {
-      const old = app.querySelector('.error'); if (old) old.remove();
-      const msg = document.createElement('p'); msg.className='error'; msg.setAttribute('role','alert'); msg.textContent = error.message || 'Connection unavailable. Please try again.'; app.append(msg);
+      const destination = ['control','publish'].includes(path) ? document.getElementById('control-message') : app;
+      const old = destination.querySelector('.error'); if (old) old.remove();
+      const msg = document.createElement('p'); msg.className='error'; msg.setAttribute('role','alert'); msg.textContent = error.message || 'Connection unavailable. Please try again.'; destination.append(msg);
     } finally { busy=false; }
   }
   app.addEventListener('click', e => {
     const dial = e.target.closest('[data-dial]');
-    if (dial) { moves.push(Number(dial.dataset.dial)); render(); return; }
+    if (dial) {
+      const frequency = Number(dial.dataset.dial);
+      moves.push(frequency);
+      render();
+      app.querySelector(`[data-dial="${frequency}"]`)?.focus();
+      return;
+    }
     const observation = e.target.closest('[data-observation]');
     if (observation) { request('complete',{observation:observation.dataset.observation}); return; }
     const action = e.target.closest('[data-action]')?.dataset.action;
@@ -51,5 +102,17 @@
   });
   document.getElementById('pause-control').addEventListener('click', () => request('control',{paused: !state?.campaign?.paused}));
   document.getElementById('capacity-save').addEventListener('click', () => request('control',{capacity:Number(document.getElementById('capacity-control').value)}));
-  request('state');
+  document.getElementById('publish-pilot').addEventListener('click', () => request('publish',{}));
+  document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+    const input = document.getElementById(button.dataset.copy);
+    if (!input.value) return;
+    try {
+      await navigator.clipboard.writeText(input.value);
+      document.getElementById('copy-status').textContent = 'Link copied.';
+    } catch {
+      input.focus(); input.select();
+      document.getElementById('copy-status').textContent = 'Select and copy the link above.';
+    }
+  }));
+  request(statePath);
 })();

@@ -1,5 +1,36 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Night Signal — Fallow Games</title><style>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Night Signal — Fallow Games</title>
+<style>
 *{box-sizing:border-box}body{margin:0;background:#0d2027;color:#e9efdf;font-family:system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px}main{width:min(680px,100%);border:1px solid #789186;background:linear-gradient(145deg,#17373a,#101f29);padding:clamp(24px,6vw,55px);box-shadow:15px 15px 0 #090f15}header{display:flex;justify-content:space-between;font-size:10px;letter-spacing:2px;color:#b3d19b}h1{font:italic 56px/1 Georgia,serif;margin:40px 0 10px;color:#d3eaaa}h2{font:normal 27px Georgia,serif}p{line-height:1.7;color:#b7c9c0}.sky{height:160px;border:1px solid #688580;background:radial-gradient(circle at 70% 35%,#eec797 0 3%,transparent 3.5%),linear-gradient(0deg,#214e4a,#1a3940 40%,#10262e);position:relative;overflow:hidden;margin:30px 0}.sky:after{content:'';position:absolute;bottom:-35px;left:-10%;width:120%;height:90px;background:#10282d;border-radius:50% 50% 0 0;transform:rotate(-4deg)}.dial{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;margin:25px 0}.dial button{aspect-ratio:1;border:1px solid #718f80;color:#dcebdd;border-radius:50%;background:#203c3b;font-size:16px;cursor:pointer}.dial button:hover,.dial button:focus-visible{background:#d3eaaa;color:#10242a}.dial button.chosen{border-color:#eec797;background:#55745c}button.next{background:#d3eaaa;border:0;color:#10242a;font-weight:700;padding:15px 24px;cursor:pointer}button:focus-visible{outline:3px solid #f6b78c;outline-offset:3px}.status{min-height:50px;border-top:1px solid #567069;padding-top:16px}.small{font-size:11px;letter-spacing:1px;color:#95aca1}@media(max-width:440px){h1{font-size:42px}.dial{grid-template-columns:repeat(4,1fr)}.dial button{max-height:60px}}
-</style></head><body><main><header><span>FALLOW GAMES / PRESENTS</span><span id="level">SIGNAL 01 / 04</span></header><h1>Night Signal</h1><p>A small game about listening closely and finding your way home.</p><div class="sky" aria-hidden="true"></div><h2 id="prompt"></h2><p id="clue"></p><div class="dial" role="group" aria-label="Choose a frequency"></div><p class="status" id="status" aria-live="polite"></p><button class="next" hidden>Follow the signal ↗</button><p class="small">PLAY OFFLINE · NO ACCOUNT · MADE FOR CURIOUS MINDS</p></main><script>
+</style>
+</head>
+<body>
+<main>
+<header>
+<span>FALLOW GAMES / PRESENTS</span>
+<span id="level">SIGNAL 01 / 04</span>
+</header>
+<h1>Night Signal</h1>
+<p>A small game about listening closely and finding your way home.</p>
+<div class="sky" aria-hidden="true">
+</div>
+<h2 id="prompt">
+</h2>
+<p id="clue">
+</p>
+<div class="dial" role="group" aria-label="Choose a frequency">
+</div>
+<p class="status" id="status" aria-live="polite">
+</p>
+<button class="next" hidden>Follow the signal ↗</button>
+<p class="small">PLAY OFFLINE · NO ACCOUNT · MADE FOR CURIOUS MINDS</p>
+</main>
+<script>
 (()=>{const levels=[{prompt:'The beacon in the fog',clue:'The first beacon hums at the frequency between four and six.',answer:5,win:'A warm light cuts through the fog. A path appears.'},{prompt:'The sleeping station',clue:'This signal is the number of wheels on a bicycle.',answer:2,win:'The old station wakes, its windows glowing softly.'},{prompt:'The forest relay',clue:'Listen for the highest frequency on your dial.',answer:7,win:'A chorus of distant lights answers through the trees.'},{prompt:'The last transmission',clue:'The final signal is an even number: one less than five.',answer:4,win:'You found the way home. Somewhere in the dark, another light answers yours.'}];let index=0;const prompt=document.querySelector('#prompt'),clue=document.querySelector('#clue'),status=document.querySelector('#status'),dial=document.querySelector('.dial'),next=document.querySelector('.next'),level=document.querySelector('#level');function show(){let l=levels[index];level.textContent=`SIGNAL 0${index+1} / 04`;prompt.textContent=l.prompt;clue.textContent=l.clue;status.textContent='Choose a frequency to listen.';next.hidden=true;dial.innerHTML='';for(let i=0;i<8;i++){let b=document.createElement('button');b.textContent=i;b.setAttribute('aria-label',`Frequency ${i}`);b.onclick=()=>{dial.querySelectorAll('button').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');if(i===l.answer){status.textContent=l.win;next.textContent=index===levels.length-1?'Play again ↗':'Follow the signal ↗';next.hidden=false}else status.textContent='Only static here. Listen again.'};dial.append(b)}}next.onclick=()=>{index=(index+1)%levels.length;show()};show()})();
-</script></body></html>
+</script>
+</body>
+</html>
