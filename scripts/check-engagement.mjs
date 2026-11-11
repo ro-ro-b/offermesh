@@ -28,13 +28,15 @@ try {
   await request('/api/engagement/control',{cookie:a.cookie,body:{paused:false}});
   await request('/api/engagement/control',{cookie:a.cookie,body:{capacity:1}});
   await request('/api/engagement/accept',{cookie:a.cookie,body:{}});
-  assert.equal((await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[0]}})).data.error,'dial_attempt_required');
+  assert.equal((await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[]}})).data.error,'dial_attempt_required');
+  assert.equal((await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[0]}})).status,200);
   await request('/api/engagement/play',{cookie:a.cookie,body:{moves:[1,5]}});
   const outcomes=await Promise.all(Array.from({length:8},()=>request('/api/engagement/complete',{cookie:a.cookie,body:{observation:'clear'}})));
   assert.ok(outcomes.every(x=>x.status===200));
   assert.equal(new Set(outcomes.map(x=>x.data.participant.receipt.id)).size,1);
   assert.equal(outcomes[0].data.metrics.earnedCents,100); assert.equal(outcomes[0].data.metrics.remainingCents,0);
   assert.equal((await request('/api/engagement/complete',{cookie:a.cookie,body:{observation:'confusing'}})).data.error,'observation_conflict');
+  assert.equal((await request('/api/engagement/claim-plan',{cookie:a.cookie,body:{wallet:'0x123'}})).data.error,'claim_unverified');
   assert.equal((await request('/api/engagement/state',{cookie:b.cookie})).data.metrics.completed,0);
   assert.equal((await request('/api/engagement/state',{cookie:a.cookie})).data.metrics.completed,1);
   assert.equal((await request('/api/engagement/reward',{cookie:b.cookie})).status,403);
@@ -61,6 +63,9 @@ try {
   assert.equal(new Set(completions.map(x=>x.data.participant.receipt.id)).size,1);
   const aggregate=await request('/api/engagement/state',{cookie:sponsor.cookie});
   assert.equal(aggregate.data.sponsor.completed,1);
+  assert.equal(aggregate.data.sponsor.accepted,2);
+  assert.equal(aggregate.data.sponsor.declined,1);
+  assert.equal((await request('/api/engagement/accept',{cookie:sponsor.cookie,body:{}})).data.error,'sponsor_cannot_participate');
   assert.equal(aggregate.data.sponsor.observations.confusing,1);
   assert.equal(aggregate.data.sponsor.publishers.fieldnotes.completed,1);
   assert.equal(aggregate.data.metrics.earnedCents,100);
